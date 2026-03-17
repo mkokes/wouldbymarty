@@ -77,51 +77,90 @@ wouldbymarty/
 ### Prerequisites
 
 - Node.js 18+
-- npm or pnpm
-- Clerk account (for authentication)
-- Stripe account (for payments)
-- Convex account (created during setup)
+- npm
 
 ### Installation
 
-1. Clone the repository
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mkokes/wouldbymarty.git
+   cd wouldbymarty
+   ```
+
 2. Install dependencies:
    ```bash
    npm install
    ```
+
 3. Set up environment variables:
    ```bash
-   cp .env.example .env
+   # Copy the example env file
+   cp .env.example .env.local
+   
+   # Edit .env.local with your API keys
+   # Required keys are in apps/web/.env.example
    ```
-4. Start Convex dev server:
+
+### Running the Development Server
+
+**Web App (recommended for initial setup):**
+```bash
+cd apps/web
+npm run dev
+```
+Then open http://localhost:3000
+
+**Mobile App:**
+```bash
+cd apps/mobile
+npm run dev
+```
+
+**All apps (Turborepo):**
+```bash
+npm run dev
+```
+
+### Development Mode (with Mock Data)
+
+The web app uses MSW (Mock Service Worker) to mock API calls in development mode. This allows you to test the UI without a running Convex backend.
+
+- **Development**: Mock data is served from `apps/web/src/mocks/handlers/`
+- **Production**: Calls go to the actual Convex backend
+
+To modify mock data, edit `apps/web/src/mocks/handlers/index.ts`
+
+### Connecting to Convex (Optional)
+
+To connect to a real Convex backend instead of mocks:
+
+1. Set up Convex:
    ```bash
    npx convex dev
    ```
-5. Start development servers:
-   ```bash
-   # Web
-   npm run dev --filter=web
-   
-   # Mobile
-   npm run dev --filter=mobile
-   ```
+
+2. Update your environment variables in `apps/web/.env.local` with your Convex deployment URL.
 
 ## Environment Variables
 
+The project uses the following environment variables. For development, a `.env.local` file is already configured with mock data support.
+
 ```env
-# Convex
-NEXT_PUBLIC_CONVEX_URL=
+# Convex (optional - uses mock data if not set)
+NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
 
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-CLERK_JWT_ISSUER_DOMAIN=
+# Clerk Authentication (required for auth)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+CLERK_JWT_ISSUER_DOMAIN=https://your-org.clerk.accounts.dev
 
-# Stripe Payments
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+# Stripe Payments (optional - for payment testing)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
+
+For development with mock data, you can use the app without configuring Clerk or Convex. The mock MSW handlers will serve data locally.
 
 ## Features
 
