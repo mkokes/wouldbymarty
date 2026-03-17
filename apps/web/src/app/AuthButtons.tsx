@@ -10,7 +10,7 @@ export default function AuthButtons() {
   if (userId) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <UserButton afterSignOutUrl="/" />
+        <UserButton />
       </div>
     );
   }
@@ -18,12 +18,26 @@ export default function AuthButtons() {
   return (
     <div style={{ display: 'flex', gap: '0.5rem' }}>
       <SignInButton mode="modal">
-        <button style={{ padding: '0.5rem 1rem', cursor: 'pointer', border: '1px solid #ddd', borderRadius: '6px', background: 'white' }}>
+        <button style={{ 
+          padding: '0.5rem 1rem', 
+          cursor: 'pointer', 
+          border: '1px solid var(--color-border)', 
+          borderRadius: '6px', 
+          background: 'var(--color-surface)',
+          color: 'var(--color-text-primary)',
+        }}>
           Sign In
         </button>
       </SignInButton>
       <SignUpButton mode="modal">
-        <button style={{ padding: '0.5rem 1rem', cursor: 'pointer', border: '1px solid #333', borderRadius: '6px', background: '#333', color: 'white' }}>
+        <button style={{ 
+          padding: '0.5rem 1rem', 
+          cursor: 'pointer', 
+          border: '1px solid var(--color-text-primary)', 
+          borderRadius: '6px', 
+          background: 'var(--color-text-primary)', 
+          color: 'var(--color-bg-primary)',
+        }}>
           Sign Up
         </button>
       </SignUpButton>
