@@ -36,9 +36,13 @@
 - [x] Phase 1: Infrastructure Setup
 - [x] Phase 2: Backend Functions (products, carts, orders)
 - [x] Theme System (4 palettes, light/dark mode, font theming)
+- [x] MSW Mock Data Setup
+- [x] Products Listing Page (with category filtering)
+- [x] Product Detail Page (with add to cart)
+- [x] Cart Page (with localStorage persistence)
 
 ### In Progress
-- [ ] Phase 3: Web Storefront
+- [ ] Phase 3: Web Storefront (checkout flow)
 
 ### Not Started
 - [ ] Phase 4: Mobile App
@@ -113,10 +117,10 @@
 - [x] Theme system (4 palettes, light/dark mode, font theming)
 
 ### 3.2 Core Pages
-- [ ] `/` - Home page with featured products
-- [ ] `/products` - Product catalog with filters
-- [ ] `/products/[id]` - Product detail page
-- [ ] `/cart` - Shopping cart page
+- [x] `/` - Home page with featured products
+- [x] `/products` - Product catalog with filters
+- [x] `/products/[id]` - Product detail page
+- [x] `/cart` - Shopping cart page
 - [ ] `/checkout` - Checkout flow
 - [ ] `/orders` - Order history
 - [ ] `/account` - User account (via Clerk)
