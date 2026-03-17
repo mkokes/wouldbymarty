@@ -29,9 +29,8 @@ export default function Home() {
             letterSpacing: '0.25em',
             textTransform: 'uppercase',
             color: 'var(--color-text-primary)',
-            border: '2px solid var(--color-text-primary)',
-            borderRadius: '999px',
-            padding: '8px 28px',
+            borderTop: '2px solid var(--color-text-primary)',
+            paddingTop: '8px',
           }}>
             By Marty
           </span>
