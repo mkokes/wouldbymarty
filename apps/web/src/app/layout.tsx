@@ -3,14 +3,13 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import { ConvexClientProvider } from './ConvexClientProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import { MSWProvider } from '@/components/MSWProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import AuthButtons from './AuthButtons';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'WouldByMarty - Custom Woodworking Crafts',
+  title: 'Would? By Marty - Custom Woodworking Crafts',
   description: 'Handcrafted woodworking products - furniture, decor, kitchen items, and custom pieces',
 };
 
@@ -23,7 +22,6 @@ export default function RootLayout({
     <ClerkProvider>
       <ConvexClientProvider>
         <ThemeProvider>
-          <MSWProvider>
             <html lang="en" suppressHydrationWarning>
               <body>
                 <header style={{
@@ -38,11 +36,31 @@ export default function RootLayout({
                   zIndex: 100,
                 }}>
                   <Link href="/" style={{ 
-                    fontSize: '1.5rem', 
-                    fontFamily: 'var(--font-heading)',
-                    color: 'var(--color-text-primary)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    textDecoration: 'none',
                   }}>
-                    WouldByMarty
+                    <span style={{ 
+                      fontFamily: 'Chango, sans-serif',
+                      fontSize: '2rem',
+                      color: 'var(--color-text-primary)',
+                      lineHeight: 1,
+                    }}>
+                      Would?
+                    </span>
+                    <span style={{ 
+                      fontFamily: 'Montserrat, sans-serif',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: 'var(--color-text-secondary)',
+                      border: '1px solid var(--color-text-secondary)',
+                      borderRadius: '6px',
+                      padding: '0.15rem 0.4rem',
+                      marginTop: '0.25rem',
+                    }}>
+                      By Marty
+                    </span>
                   </Link>
                   <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <Link href="/products" style={{ 
@@ -79,8 +97,7 @@ export default function RootLayout({
                 </main>
               </body>
             </html>
-          </MSWProvider>
-        </ThemeProvider>
+          </ThemeProvider>
       </ConvexClientProvider>
     </ClerkProvider>
   );
