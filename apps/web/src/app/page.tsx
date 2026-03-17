@@ -7,8 +7,8 @@ export default function Home() {
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '16px',
+          alignItems: 'flex-end',
+          gap: '12px',
           marginBottom: '1rem',
         }}>
           <h1 style={{ 
