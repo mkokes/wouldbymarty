@@ -3,43 +3,6 @@ import Link from 'next/link';
 export default function Home() {
   return (
     <main style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <header style={{ marginBottom: '3rem', textAlign: 'center' }}>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'flex-end',
-          gap: '12px',
-          marginBottom: '1rem',
-        }}>
-          <h1 style={{ 
-            fontFamily: 'Chango, sans-serif',
-            fontWeight: 400,
-            fontSize: '4rem',
-            lineHeight: 1,
-            color: 'var(--color-text-primary)',
-            letterSpacing: '-1px',
-            margin: 0,
-          }}>
-            Would?
-          </h1>
-          <span style={{ 
-            fontFamily: 'Montserrat, sans-serif',
-            fontWeight: 500,
-            fontSize: '1rem',
-            letterSpacing: '0.25em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-primary)',
-            borderTop: '2px solid var(--color-text-primary)',
-            paddingTop: '8px',
-          }}>
-            By Marty
-          </span>
-        </div>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.2rem' }}>
-          Custom Woodworking Crafts
-        </p>
-      </header>
-
       <section style={{ marginBottom: '3rem' }}>
         <h2 style={{ marginBottom: '1.5rem', fontFamily: 'var(--font-heading)' }}>Welcome to Our Shop</h2>
         <p style={{ lineHeight: '1.6', marginBottom: '1rem', color: 'var(--color-text-secondary)' }}>
