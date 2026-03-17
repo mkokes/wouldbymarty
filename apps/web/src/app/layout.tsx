@@ -38,26 +38,32 @@ export default function RootLayout({
                   <Link href="/" style={{ 
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
+                    gap: '16px',
+                    width: 'fit-content',
                     textDecoration: 'none',
                   }}>
                     <span style={{ 
                       fontFamily: 'Chango, sans-serif',
-                      fontSize: '2rem',
-                      color: 'var(--color-text-primary)',
+                      fontWeight: 400,
+                      fontSize: '2.5rem',
                       lineHeight: 1,
+                      color: 'var(--color-text-primary)',
+                      letterSpacing: '-1px',
+                      margin: 0,
                     }}>
                       Would?
                     </span>
                     <span style={{ 
                       fontFamily: 'Montserrat, sans-serif',
-                      fontSize: '0.75rem',
                       fontWeight: 500,
-                      color: 'var(--color-text-secondary)',
-                      border: '1px solid var(--color-text-secondary)',
-                      borderRadius: '6px',
-                      padding: '0.15rem 0.4rem',
-                      marginTop: '0.25rem',
+                      fontSize: '0.875rem',
+                      letterSpacing: '0.25em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-text-primary)',
+                      border: '2px solid var(--color-text-primary)',
+                      borderRadius: '999px',
+                      padding: '8px 28px',
                     }}>
                       By Marty
                     </span>
