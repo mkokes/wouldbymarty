@@ -329,9 +329,9 @@ export default function CartPage() {
               </span>
             </div>
 
-            <button className="btn btn-primary" style={{ width: '100%' }}>
+            <Link href="/checkout" className="btn btn-primary" style={{ width: '100%', textAlign: 'center' }}>
               Proceed to Checkout
-            </button>
+            </Link>
 
             <p style={{ 
               fontSize: '0.75rem', 
