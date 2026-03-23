@@ -86,6 +86,12 @@ export default function RootLayout({
                     }}>
                       Orders
                     </Link>
+                    <Link href="/account" style={{ 
+                      color: 'var(--color-text-secondary)',
+                      fontWeight: 500,
+                    }}>
+                      Account
+                    </Link>
                     <div style={{ 
                       width: '1px', 
                       height: '24px', 
