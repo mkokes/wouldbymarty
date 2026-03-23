@@ -40,9 +40,11 @@
 - [x] Products Listing Page (with category filtering)
 - [x] Product Detail Page (with add to cart)
 - [x] Cart Page (with localStorage persistence)
+- [x] Checkout Page (multi-step flow)
+- [x] Orders Page (order history)
 
 ### In Progress
-- [ ] Phase 3: Web Storefront (checkout flow)
+- [ ] Phase 3: Web Storefront (finishing touches)
 
 ### Not Started
 - [ ] Phase 4: Mobile App
@@ -121,8 +123,8 @@
 - [x] `/products` - Product catalog with filters
 - [x] `/products/[id]` - Product detail page
 - [x] `/cart` - Shopping cart page
-- [ ] `/checkout` - Checkout flow
-- [ ] `/orders` - Order history
+- [x] `/checkout` - Checkout flow (multi-step)
+- [x] `/orders` - Order history
 - [ ] `/account` - User account (via Clerk)
 
 ### 3.3 Components
