@@ -125,7 +125,7 @@
 - [x] `/cart` - Shopping cart page
 - [x] `/checkout` - Checkout flow (multi-step)
 - [x] `/orders` - Order history
-- [ ] `/account` - User account (via Clerk)
+- [x] `/account` - User account (via Clerk)
 
 ### 3.3 Components
 - [ ] `ProductCard` - Product display card
