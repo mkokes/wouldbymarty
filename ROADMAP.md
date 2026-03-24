@@ -3,10 +3,10 @@
 ## Project Overview
 
 - **Store**: E-commerce for custom woodworking crafts
-- **Platform**: Convex + Next.js + Expo
+- **Platform**: Convex + Next.js + Expo + Coolify
 - **Database**: Convex built-in
 - **Payments**: Stripe + Venmo
-- **Hosting**: Vercel (web), EAS (mobile)
+- **Hosting**: Coolify (VPS at dash.martykokes.com)
 
 ---
 
@@ -44,10 +44,10 @@
 - [x] Orders Page (order history)
 
 ### In Progress
-- [ ] Phase 3: Web Storefront (finishing touches)
+- [ ] Phase 4: Mobile App
 
 ### Not Started
-- [ ] Phase 4: Mobile App
+- [ ] Phase 5: Payments & Deployment
 - [ ] Phase 5: Payments & Deployment
 
 ---
@@ -128,17 +128,17 @@
 - [x] `/account` - User account (via Clerk)
 
 ### 3.3 Components
-- [ ] `ProductCard` - Product display card
-- [ ] `ProductGrid` - Grid layout for products
-- [ ] `ProductGallery` - Image gallery with zoom
-- [ ] `CartDrawer` - Slide-out cart
-- [ ] `CheckoutForm` - Multi-step checkout
-- [ ] `OrderSummary` - Order totals display
+- [x] `ProductCard` - Product display card
+- [x] `ProductGrid` - Grid layout for products
+- [x] `ProductGallery` - Image gallery with zoom
+- [x] `CartDrawer` - Slide-out cart
+- [x] `CheckoutForm` - Multi-step checkout
+- [x] `OrderSummary` - Order totals display
 
 ### 3.4 Woodworking Features
-- [ ] Variant selector (wood type, finish)
-- [ ] Custom dimensions display
-- [ ] Inventory status indicator
+- [x] Variant selector (wood type, finish)
+- [x] Custom dimensions display
+- [x] Inventory status indicator
 
 ---
 
@@ -184,11 +184,14 @@
 - [ ] Configure PayPal in Stripe
 - [ ] Test payment flows
 
-### 5.3 Web Deployment
-- [ ] Set up Vercel project
-- [ ] Configure environment variables
-- [ ] Deploy to production
-- [ ] Set up preview deployments
+### 5.3 Web Deployment (Coolify)
+- [ ] Connect GitHub repo to Coolify
+- [ ] Create Next.js application in Coolify
+- [ ] Configure root directory (`apps/web`)
+- [ ] Set environment variables
+- [ ] Configure domain (wouldbymarty.com)
+- [ ] Enable auto-deploy on main branch
+- [ ] Set up preview deployments (optional)
 
 ### 5.4 Mobile Deployment
 - [ ] Set up EAS project
@@ -325,4 +328,4 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
 ---
 
-*Last Updated: 2026-03-17*
+*Last Updated: 2026-03-23*

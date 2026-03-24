@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import { ConvexClientProvider } from './ConvexClientProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { MSWProvider } from '@/components/MSWProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import AuthButtons from './AuthButtons';
@@ -21,8 +22,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <ConvexClientProvider>
-        <ThemeProvider>
-            <html lang="en" suppressHydrationWarning>
+<ThemeProvider>
+            <MSWProvider>
+              <html lang="en" suppressHydrationWarning>
               <body>
                 <header style={{
                   display: 'flex',
@@ -108,7 +110,8 @@ export default function RootLayout({
                 </main>
               </body>
             </html>
-          </ThemeProvider>
+          </MSWProvider>
+        </ThemeProvider>
       </ConvexClientProvider>
     </ClerkProvider>
   );

@@ -1,5 +1,13 @@
 const API_BASE = '/api';
 
+export interface ProductVariant {
+  id: string;
+  woodType: string;
+  finish: string;
+  priceAdjustment: number;
+  inventory: number;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -11,6 +19,7 @@ export interface Product {
   woodType?: string;
   finish?: string;
   dimensions?: string;
+  variants?: ProductVariant[];
   createdAt: number;
 }
 
