@@ -32,6 +32,7 @@ export default function CheckoutPage() {
     postal_code: '',
   });
   const [loading, setLoading] = useState(true);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart');
@@ -45,6 +46,14 @@ export default function CheckoutPage() {
       setCartItems(itemsWithNames);
     }
     setLoading(false);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      setStep('confirmation');
+      localStorage.removeItem('cart');
+    } else if (params.get('canceled') === 'true') {
+      setStep('payment');
+    }
   }, []);
 
   function getProductName(productId: string): string {
@@ -87,9 +96,33 @@ export default function CheckoutPage() {
     setStep('payment');
   };
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('confirmation');
+    setIsProcessingPayment(true);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cartItems,
+          shippingAddress,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        alert('Payment failed: ' + data.error);
+        setIsProcessingPayment(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Failed to process payment');
+      setIsProcessingPayment(false);
+    }
   };
 
   if (loading) {
@@ -338,28 +371,64 @@ export default function CheckoutPage() {
       {step === 'payment' && (
         <form onSubmit={handlePaymentSubmit} style={{ maxWidth: '600px' }}>
           <h2 style={{ marginBottom: '1.5rem' }}>Payment</h2>
+          
           <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-              Payment integration coming soon. This is a demo checkout.
-            </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ fontWeight: 500, marginBottom: '0.5rem' }}>Order Total</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-accent)' }}>
+                {formatPrice(total)}
+              </p>
+            </div>
+            
             <div style={{ 
               padding: '1rem', 
               backgroundColor: 'var(--color-bg-secondary)', 
               borderRadius: '8px',
-              textAlign: 'center',
+              marginBottom: '1rem',
             }}>
-              <p style={{ fontWeight: 500 }}>Demo Mode</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                <span style={{ fontWeight: 500 }}>Credit Card</span>
+              </div>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-                Click "Place Order" to simulate a successful order
+                Secure payment via Stripe. Accepts Visa, Mastercard, Amex, and more.
+              </p>
+            </div>
+
+            <div style={{ 
+              padding: '1rem', 
+              backgroundColor: 'var(--color-bg-secondary)', 
+              borderRadius: '8px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>💵</span>
+                <span style={{ fontWeight: 500 }}>Venmo</span>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                Pay with Venmo - available as payment option on next page
               </p>
             </div>
           </div>
+          
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button type="button" onClick={() => setStep('shipping')} className="btn btn-secondary">
+            <button 
+              type="button" 
+              onClick={() => setStep('shipping')} 
+              className="btn btn-secondary"
+              disabled={isProcessingPayment}
+            >
               Back
             </button>
-            <button type="submit" className="btn btn-primary">
-              Place Order
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={isProcessingPayment}
+              style={{ flex: 1 }}
+            >
+              {isProcessingPayment ? 'Processing...' : 'Proceed to Payment'}
             </button>
           </div>
         </form>
