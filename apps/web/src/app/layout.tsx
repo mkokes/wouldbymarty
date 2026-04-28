@@ -20,12 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <ConvexClientProvider>
-<ThemeProvider>
-            <MSWProvider>
-              <html lang="en" suppressHydrationWarning>
-              <body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ClerkProvider>
+          <ConvexClientProvider>
+            <ThemeProvider>
+              <MSWProvider>
                 <header style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -108,11 +108,11 @@ export default function RootLayout({
                 <main>
                   {children}
                 </main>
-              </body>
-            </html>
-          </MSWProvider>
-        </ThemeProvider>
-      </ConvexClientProvider>
-    </ClerkProvider>
+              </MSWProvider>
+            </ThemeProvider>
+          </ConvexClientProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
