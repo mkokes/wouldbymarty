@@ -35,78 +35,82 @@
 - [x] Documentation updated (README.md, ARCHITECTURE.md)
 - [x] Phase 1: Infrastructure Setup
 - [x] Phase 2: Backend Functions (products, carts, orders)
+- [x] Phase 3: Web Storefront (all pages and components)
 - [x] Theme System (4 palettes, light/dark mode, font theming)
 - [x] MSW Mock Data Setup
+- [x] Stripe Integration (payment processing + webhook handler)
 - [x] Products Listing Page (with category filtering)
 - [x] Product Detail Page (with add to cart)
-- [x] Cart Page (with localStorage persistence)
+- [x] Cart Page (with Convex persistence)
 - [x] Checkout Page (multi-step flow)
 - [x] Orders Page (order history)
+- [x] Account Page (via Clerk)
 
 ### In Progress
-- [ ] Phase 4: Mobile App
+- [ ] Phase 4: Mobile App (Expo project initialized, screens pending)
+- [x] Phase 5: Payments - Stripe integration complete, Venmo pending
 
 ### Not Started
-- [ ] Phase 5: Payments & Deployment
-- [ ] Phase 5: Payments & Deployment
+- [ ] Venmo/PayPal Configuration
+- [ ] Phase 5: Deployment (Coolify + App Stores)
 
 ---
 
 ## Phase 1: Infrastructure Setup
 
 ### 1.1 Project Initialization
-- [ ] Create Turborepo monorepo structure
-- [ ] Initialize Convex backend (`npx convex dev`)
-- [ ] Set up Next.js web app (`apps/web`)
-- [ ] Set up Expo mobile app (`apps/mobile`)
+- [x] Create Turborepo monorepo structure
+- [x] Initialize Convex backend (`npx convex dev`)
+- [x] Set up Next.js web app (`apps/web`)
+- [x] Set up Expo mobile app (`apps/mobile`)
 
 ### 1.2 Authentication (Clerk)
-- [ ] Create Clerk account and application
-- [ ] Install `@clerk/nextjs` and `@clerk/expo`
-- [ ] Configure Clerk publishable/secret keys
-- [ ] Set up JWT template in Clerk dashboard
-- [ ] Create `convex/auth.config.ts`
+- [x] Create Clerk account and application
+- [x] Install `@clerk/nextjs` and `@clerk/expo`
+- [x] Configure Clerk publishable/secret keys
+- [x] Set up JWT template in Clerk dashboard
+- [x] Create `convex/auth.config.ts`
 
 ### 1.3 Convex Configuration
-- [ ] Set up environment variables
-- [ ] Configure Convex provider in Next.js
-- [ ] Configure Convex provider in Expo
-- [ ] Test authentication flow
+- [x] Set up environment variables
+- [x] Configure Convex provider in Next.js
+- [x] Configure Convex provider in Expo
+- [x] Test authentication flow
 
 ### 1.4 Shared Package
-- [ ] Create `packages/ui` for shared components
-- [ ] Set up build configuration
+- [x] Create `packages/ui` for shared components
+- [x] Set up build configuration
 
 ---
 
 ## Phase 2: Backend Functions
 
 ### 2.1 Database Schema
-- [ ] Define products table
-- [ ] Define orders table
-- [ ] Define carts table
-- [ ] Define users table (linked to Clerk)
+- [x] Define products table
+- [x] Define orders table
+- [x] Define carts table
+- [x] Define users table (linked to Clerk)
 
 ### 2.2 Product Functions
-- [ ] `products.get()` - List all products
-- [ ] `products.getById()` - Get single product
-- [ ] `products.getByCategory()` - Filter by category
-- [ ] `products.create()` - Create product (admin)
-- [ ] `products.update()` - Update product (admin)
-- [ ] `products.delete()` - Delete product (admin)
+- [x] `products.get()` - List all products
+- [x] `products.getById()` - Get single product
+- [x] `products.getByCategory()` - Filter by category
+- [x] `products.create()` - Create product (admin)
+- [x] `products.update()` - Update product (admin)
+- [x] `products.delete()` - Delete product (admin)
 
 ### 2.3 Cart Functions
-- [ ] `carts.get()` - Get user's cart
-- [ ] `carts.addItem()` - Add item to cart
-- [ ] `carts.updateItem()` - Update quantity
-- [ ] `carts.removeItem()` - Remove item
-- [ ] `carts.clear()` - Empty cart
+- [x] `carts.get()` - Get user's cart
+- [x] `carts.addItem()` - Add item to cart
+- [x] `carts.updateItem()` - Update quantity
+- [x] `carts.removeItem()` - Remove item
+- [x] `carts.clear()` - Empty cart
 
 ### 2.4 Order Functions
-- [ ] `orders.get()` - Get user's orders
-- [ ] `orders.getById()` - Get single order
-- [ ] `orders.create()` - Create order from cart
-- [ ] `orders.updateStatus()` - Update status (admin)
+- [x] `orders.get()` - Get user's orders
+- [x] `orders.getById()` - Get single order
+- [x] `orders.create()` - Create order from cart
+- [x] `orders.updateStatus()` - Update status (admin)
 
 ---
 
@@ -173,11 +177,11 @@
 ## Phase 5: Payments & Deployment
 
 ### 5.1 Stripe Integration
-- [ ] Install `@convex-dev/stripe`
-- [ ] Configure Stripe keys in Convex
-- [ ] Set up webhook handler
-- [ ] Implement checkout session creation
-- [ ] Handle payment success/failure
+- [x] Install `@convex-dev/stripe`
+- [x] Configure Stripe keys in Convex
+- [x] Set up webhook handler
+- [x] Implement checkout session creation
+- [x] Handle payment success/failure
 
 ### 5.2 Venmo/PayPal
 - [ ] Enable Venmo in Stripe Dashboard
@@ -321,13 +325,13 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 | Milestone | Target | Status |
 |-----------|--------|--------|
-| Phase 1 Complete | Week 1 | In Progress |
-| Phase 2 Complete | Week 2 | Not Started |
-| Phase 3 Complete | Week 3 | Not Started |
-| Phase 4 Complete | Week 4 | Not Started |
-| Phase 5 Complete | Week 5 | Not Started |
+| Phase 1 Complete | Week 1 | Complete |
+| Phase 2 Complete | Week 2 | Complete |
+| Phase 3 Complete | Week 3 | Complete |
+| Phase 4 Complete | Week 4 | In Progress |
+| Phase 5 Complete | Week 5 | In Progress |
 | Launch | Week 6 | Not Started |
 
 ---
 
-*Last Updated: 2026-03-23*
+*Last Updated: 2026-04-28*
