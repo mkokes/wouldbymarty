@@ -4,17 +4,20 @@
 This is a Convex-powered e-commerce project for "WouldByMarty" - a custom woodworking crafts store.
 
 ## Architecture
-- **Backend**: Convex (server functions + database)
-- **Frontend Web**: Next.js 14+ (App Router) in `apps/web/`
-- **Frontend Mobile**: Expo SDK 52+ (Expo Router) in `apps/mobile/`
+- **Backend**: Convex (server functions + database) — schema and functions exist but the web app is not yet wired up to them (see Current State below)
+- **Frontend Web**: Next.js 16+ (App Router) in `apps/web/`
+- **Frontend Mobile**: Expo SDK 52+ (Expo Router) in `apps/mobile/` — currently scaffold only, no screens
 - **Auth**: Clerk
-- **Payments**: Stripe + Venmo (via @convex-dev/stripe)
+- **Payments**: Stripe, implemented directly via the `stripe` npm package in Next.js Route Handlers (`apps/web/src/app/api/checkout`, `apps/web/src/app/api/webhooks/stripe`). `@convex-dev/stripe` is a dependency but not yet used; Venmo can be enabled through Stripe Dashboard but isn't configured yet.
 - **Hosting**: Coolify (VPS at dash.martykokes.com)
 
 ## Key Files
 - `apps/web/` - Next.js web application
-- `apps/mobile/` - Expo mobile application
+- `apps/mobile/` - Expo mobile application (scaffold only — see `docs/superpowers/specs/2026-04-28-mobile-app-design.md` for the approved build plan)
 - `convex/` - Convex backend functions and schema
+
+## Current State
+The web app currently runs on mock data, not live Convex queries: product data comes from MSW handlers (`apps/web/src/mocks/handlers/index.ts`), cart state is persisted to `localStorage`, and orders use mock data. The Convex functions in `convex/functions/` exist and are ready to be wired in, but no page calls `useQuery`/`useMutation` yet. See `CLAUDE.md` for details before assuming a page is backed by Convex.
 
 ## Coolify Deployment
 

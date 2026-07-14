@@ -144,13 +144,19 @@ products.update()        // Update product
 products.delete()        // Delete product
 ```
 
-### Action Functions (Complex Operations)
+### Payments (Next.js Route Handlers, not Convex actions)
+
+Payments are **not** implemented as Convex actions today. They're plain Next.js Route Handlers using the `stripe` npm package directly:
 
 ```typescript
-stripe.createCheckout()  // Create Stripe checkout session
-stripe.handleWebhook()   // Handle Stripe webhooks
-paypal.createOrder()    // Create PayPal order
+// apps/web/src/app/api/checkout/route.ts
+POST /api/checkout          // Create Stripe checkout session
+
+// apps/web/src/app/api/webhooks/stripe/route.ts
+POST /api/webhooks/stripe   // Verify signature and handle Stripe webhook events
 ```
+
+`@convex-dev/stripe` is listed as a dependency for a future Convex-native integration but isn't used yet. PayPal/Venmo is not implemented.
 
 ## Authentication Flow
 
@@ -177,10 +183,10 @@ paypal.createOrder()    // Create PayPal order
 ## Payment Flow
 
 ```
-┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐
-│  User   │────▶│ Convex  │────▶│ Stripe  │────▶│ Webhook │
-│ Checkout│     │ Action  │     │  API    │     │ Handler │
-└─────────┘     └─────────┘     └─────────┘     └─────────┘
+┌─────────┐     ┌─────────────┐     ┌─────────┐     ┌─────────────┐
+│  User   │────▶│ Next.js API │────▶│ Stripe  │────▶│ Next.js API │
+│ Checkout│     │ Route       │     │  API    │     │ Webhook     │
+└─────────┘     └─────────────┘     └─────────┘     └─────────────┘
      │               │               │               │
      │  Session URL  │               │  Payment      │
      │◀──────────────│               │  Confirmed    │
@@ -193,10 +199,12 @@ paypal.createOrder()    // Create PayPal order
 ```
 
 1. User clicks "Checkout" in app
-2. Convex action creates Stripe Checkout Session
+2. `apps/web/src/app/api/checkout/route.ts` creates the Stripe Checkout Session
 3. User redirected to Stripe hosted checkout
-4. Stripe webhook notifies Convex of payment status
-5. Order status updated, user redirected to confirmation
+4. Stripe sends webhook events to `apps/web/src/app/api/webhooks/stripe/route.ts`
+5. Webhook handler verifies the signature and logs the event (order status is not yet updated in Convex — that wiring hasn't been built)
+
+Note: this flow does not currently go through Convex at all — there's no Convex action or `http.ts` webhook endpoint. See [CLAUDE.md](CLAUDE.md) for what's built vs. wired up.
 
 ## File Structure
 
@@ -221,25 +229,16 @@ apps/
 │   │   │   └── ...
 │   │   │
 │   │   └── lib/          # Utilities
-│   │       ├── convex.ts  # Convex client
-│   │       └── stripe.ts  # Stripe utilities
+│   │       ├── api.ts     # Mock-backed fetch wrapper (products)
+│   │       └── themes.ts  # Theme system
 │   │
 │   └── package.json
 │
-└── mobile/                 # Expo SDK 52+ (Expo Router)
-    ├── app/               # File-based routing
-    │   ├── _layout.tsx   # Root layout
-    │   ├── index.tsx     # Home
-    │   ├── products/
-    │   │   ├── index.tsx # Listing
-    │   │   └── [id].tsx  # Detail
-    │   ├── cart.tsx
-    │   ├── checkout.tsx
-    │   └── orders.tsx
-    │
-    ├── components/        # UI components
-    └── package.json
+└── mobile/                 # Expo SDK 52+ (Expo Router) — scaffold only today
+    └── package.json        # deps installed (expo-router, convex, @clerk/clerk-expo); no app/ dir or screens yet
 ```
+
+The tree above is the *planned* structure from `docs/superpowers/specs/2026-04-28-mobile-app-design.md`, not yet built.
 
 ### Shared Packages
 
@@ -258,22 +257,24 @@ packages/
 convex/
 ├── schema.ts             # Database schema
 ├── auth.config.ts        # Clerk auth configuration
-├── functions/            # API functions
-│   ├── products.ts       # Product queries/mutations
-│   ├── carts.ts          # Cart operations
-│   ├── orders.ts         # Order management
-│   └── stripe.ts         # Payment handling
-├── http.ts               # HTTP endpoints (webhooks)
-└── convex.config.ts      # Convex configuration
+└── functions/            # API functions
+    ├── products.ts       # Product queries/mutations
+    ├── carts.ts          # Cart operations
+    └── orders.ts         # Order management
 ```
+
+These exist and are schema-complete, but the web app doesn't call them yet (see Current State / [CLAUDE.md](CLAUDE.md)). There is no `http.ts` — payment webhooks are handled in the Next.js app, not Convex.
 
 ## Deployment
 
-### Web (Vercel - Recommended)
+### Web (Coolify)
 
-1. Connect GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main
+Target: Coolify (VPS at dash.martykokes.com), not Vercel — per `ROADMAP.md` the Coolify setup itself is still an unchecked task, so treat this as the plan rather than a confirmed live deployment.
+
+1. Connect GitHub repo to Coolify
+2. Nixpacks build pack; build command `cd apps/web && npm run build`, start command `cd apps/web && npm run start`
+3. Environment variables set in the Coolify app's Environment Variables section (see `AGENTS.md` for the full list)
+4. Auto-deploy on push to `main`
 
 ### Mobile (EAS)
 
@@ -286,8 +287,7 @@ convex/
 | Environment | URL | Description |
 |-------------|-----|-------------|
 | Development | localhost:3000 | Local dev |
-| Preview | *.vercel.app | Pull request previews |
-| Production | wouldbymarty.com | Live store |
+| Production (target) | wouldbymarty.com | Coolify — see note above |
 
 ## Security Considerations
 

@@ -23,7 +23,7 @@
 - Frontend Web: Next.js 14+ (App Router)
 - Frontend Mobile: Expo SDK 52+ (Expo Router)
 - Auth: Clerk
-- Payments: Stripe + Venmo (via @convex-dev/stripe)
+- Payments: Stripe, implemented directly via Next.js Route Handlers (not yet migrated to `@convex-dev/stripe`); Venmo not yet configured
 - Monorepo: Turborepo
 
 ---
@@ -48,7 +48,8 @@
 
 ### In Progress
 - [ ] Phase 4: Mobile App (Expo project initialized, screens pending)
-- [x] Phase 5: Payments - Stripe integration complete, Venmo pending
+- [ ] Phase 5: Payments - Stripe checkout + webhook logging in place; order-status updates, Venmo, and Convex migration still pending
+- [ ] Wire the web app's product/cart/order pages up to live Convex queries (currently mock data + localStorage)
 
 ### Not Started
 - [ ] Venmo/PayPal Configuration
@@ -177,11 +178,10 @@
 ## Phase 5: Payments & Deployment
 
 ### 5.1 Stripe Integration
-- [x] Install `@convex-dev/stripe`
-- [x] Configure Stripe keys in Convex
-- [x] Set up webhook handler
-- [x] Implement checkout session creation
-- [x] Handle payment success/failure
+- [x] Implement checkout session creation (Next.js Route Handler, plain `stripe` SDK)
+- [x] Set up webhook handler (verifies signature, logs event)
+- [ ] Update order status in Convex from webhook events (currently just logs)
+- [ ] Migrate to `@convex-dev/stripe` (currently just a listed dependency, unused)
 
 ### 5.2 Venmo/PayPal
 - [ ] Enable Venmo in Stripe Dashboard

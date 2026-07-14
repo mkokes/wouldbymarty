@@ -14,7 +14,7 @@ A full-stack e-commerce platform for "WouldByMarty" - a custom woodworking craft
 | **Authentication** | Clerk | User authentication & management |
 | **Payments** | Stripe + Venmo | Payment processing |
 | **Monorepo** | Turborepo | Code sharing between web/mobile |
-| **Hosting** | Vercel (web), EAS (mobile) | Deployment |
+| **Hosting** | Coolify (web, VPS at dash.martykokes.com), EAS (mobile) | Deployment |
 
 ## Architecture
 
@@ -123,16 +123,13 @@ npm run dev
 
 ### Development Mode (with Mock Data)
 
-The web app uses MSW (Mock Service Worker) to mock API calls in development mode. This allows you to test the UI without a running Convex backend.
+The web app uses MSW (Mock Service Worker) to mock API calls (`apps/web/src/mocks/handlers/`) intercepted client-side in the browser; there is no real `/api/products` route. Cart state persists to `localStorage`, and orders use mock data too. This is the app's current state everywhere it runs, not just in development — see [CLAUDE.md](CLAUDE.md) for the full picture.
 
-- **Development**: Mock data is served from `apps/web/src/mocks/handlers/`
-- **Production**: Calls go to the actual Convex backend
+To modify mock data, edit `apps/web/src/mocks/handlers/index.ts`.
 
-To modify mock data, edit `apps/web/src/mocks/handlers/index.ts`
+### Connecting to Convex (Not Yet Wired Up)
 
-### Connecting to Convex (Optional)
-
-To connect to a real Convex backend instead of mocks:
+A Convex backend already exists (`convex/schema.ts`, `convex/functions/`) and `ConvexClientProvider` wraps the app, but no page currently calls it — see `CLAUDE.md` for details. To stand up a Convex dev deployment while working on wiring this in:
 
 1. Set up Convex:
    ```bash
@@ -166,13 +163,16 @@ For development with mock data, you can use the app without configuring Clerk or
 ## Features
 
 - Product catalog with categories (furniture, decor, kitchen, wall-art, custom)
-- Shopping cart with real-time sync
-- Checkout with Stripe payments
-- Venmo payment option via Stripe
+- Shopping cart (persisted to `localStorage` today; Convex-backed sync is built on the backend but not yet wired into the frontend)
+- Checkout with Stripe payments (Next.js Route Handlers, not yet migrated to `@convex-dev/stripe`)
 - User authentication (Clerk)
-- Order history and tracking
-- Real-time inventory updates
-- Mobile app with full e-commerce functionality
+- Order history (mock data today; Convex `orders` functions exist and are ready to wire in)
+- Mobile app - not yet built (Expo project scaffolded; see `docs/superpowers/specs/2026-04-28-mobile-app-design.md` for the approved design)
+
+### Planned / not yet implemented
+- Venmo payment option via Stripe
+- Real-time inventory updates and cart sync via Convex
+- Mobile app screens
 
 ## Custom Attributes for Woodworking
 
