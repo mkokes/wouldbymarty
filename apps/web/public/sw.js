@@ -2,8 +2,9 @@
 // - Pages: network-first, so a fresh Instagram feed shows when online; cached copy offline.
 // - /assets/*: cache-first (Vite filenames are content-hashed).
 // - Everything else same-origin (Instagram images, icons, manifest): stale-while-revalidate.
+// - Video (the hero reel) bypasses the worker: browsers stream it with range requests.
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const PAGE_CACHE = `wbm-pages-${VERSION}`;
 const STATIC_CACHE = `wbm-static-${VERSION}`;
 const RUNTIME_CACHE = `wbm-runtime-${VERSION}`;
@@ -78,6 +79,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (request.headers.has('range') || request.destination === 'video') return;
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request));

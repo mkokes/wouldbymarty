@@ -1,8 +1,13 @@
 # Checks, builds and deploys the site to GitHub Pages.
 #
 # - Pull requests: lint, format check, tests and build only (no deploy, no token refresh).
-# - Pushes to main, the daily schedule and manual runs: also deploy. The schedule
-#   picks up new Instagram posts and refreshes the Instagram access token.
+# - Pushes to main: the same checks; deploys only if the commit came from a merged PR,
+#   so direct pushes to main never go live.
+# - Daily schedule and manual runs: rebuild with fresh Instagram posts, refresh the
+#   Instagram access token and deploy.
+#
+# Merges are detected from the push to main (not the PR "closed" event) because the
+# github-pages environment only allows deployments from main.
 #
 # Repository secrets (Settings > Secrets and variables > Actions):
 #   INSTAGRAM_ACCESS_TOKEN  long-lived Instagram token
@@ -32,7 +37,30 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.gate.outputs.deploy }}
     steps:
+      - name: Decide whether to deploy
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          case "$EVENT" in
+            pull_request)
+              deploy=false ;;
+            push)
+              merged=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
+                --jq '[.[] | select(.merged_at != null and .base.ref == "main")] | length')
+              if [ "$merged" -gt 0 ]; then deploy=true; else deploy=false; fi
+              echo "Commit from a merged PR: $deploy" ;;
+            *)
+              deploy=true ;;
+          esac
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -49,14 +77,14 @@ jobs:
         run: npm run build --workspace web
         env:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-          GH_SECRETS_TOKEN: ${{ github.event_name != 'pull_request' && secrets.GH_SECRETS_TOKEN || '' }}
-      - if: github.event_name != 'pull_request'
+          GH_SECRETS_TOKEN: ${{ steps.gate.outputs.deploy == 'true' && secrets.GH_SECRETS_TOKEN || '' }}
+      - if: steps.gate.outputs.deploy == 'true'
         uses: actions/upload-pages-artifact@v5
         with:
           path: apps/web/dist
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: needs.build.outputs.deploy == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:

@@ -49,8 +49,8 @@ The app only needs the `instagram_business_basic` permission. It doesn't need ap
 
 The workflow is `.github/workflows/deploy.yml`.
 - On pull requests, it runs lint, format check, tests and build.
-- On pushes to `main`, it also deploys `apps/web/dist` to GitHub Pages.
-- It runs daily on a schedule (11:00 UTC), and can be started by hand from the Actions tab.
+- When a PR is merged into `main`, it deploys `apps/web/dist` to GitHub Pages. A direct push to `main` runs the checks but doesn't deploy.
+- It also deploys once a day on a schedule (11:00 UTC) to pick up new Instagram posts, and can be started by hand from the Actions tab.
 
 Pages is already enabled for this repo with **Source: GitHub Actions**, and `wouldbymarty.com` is set as the custom domain with HTTPS enforced. The remaining setup is two repository secrets (Settings → Secrets and variables → Actions):
 

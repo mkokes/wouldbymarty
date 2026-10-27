@@ -23,7 +23,7 @@
 
 ### Workflow (`.github/workflows/deploy.yml`)
 - Pull request → lint, format check, tests, build (no deploy).
-- Push to `main` → the same checks, then deploy to Pages.
+- PR merged into `main` → the same checks, then deploy to Pages. A direct push to `main` → checks only.
 - Daily schedule → re-sync Instagram, refresh the token, redeploy.
 - Custom domain: wouldbymarty.com, configured in Settings → Pages.
 

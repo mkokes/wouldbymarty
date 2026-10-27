@@ -1,12 +1,5 @@
-import type { InstagramPost } from '../lib/instagram';
-
-const CAPTION_LENGTH = 120;
-
-export function excerpt(caption: string | null) {
-  if (!caption) return '';
-  const firstLine = caption.split('\n')[0];
-  return firstLine.length > CAPTION_LENGTH ? `${firstLine.slice(0, CAPTION_LENGTH).trimEnd()}…` : firstLine;
-}
+import { excerpt, type InstagramPost } from '../lib/instagram';
+import { Picture } from './Picture';
 
 function MediaBadge({ type }: { type: InstagramPost['mediaType'] }) {
   if (type === 'IMAGE') return null;
@@ -28,16 +21,15 @@ function MediaBadge({ type }: { type: InstagramPost['mediaType'] }) {
 export function InstagramGrid({ posts }: { posts: InstagramPost[] }) {
   return (
     <ul className="ig-grid">
-      {posts.map((post, index) => {
+      {posts.map((post) => {
         const text = excerpt(post.caption);
         return (
-          <li key={post.id}>
+          <li key={post.id} data-reveal>
             <a className="ig-tile" href={post.permalink} target="_blank" rel="noopener noreferrer">
-              <img
-                src={post.image}
+              <Picture
+                image={post.image}
                 alt={text || 'Instagram post from @wouldbymarty'}
-                loading={index < 3 ? 'eager' : 'lazy'}
-                decoding="async"
+                sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 360px"
               />
               <MediaBadge type={post.mediaType} />
               {text && <span className="ig-tile__caption">{text}</span>}

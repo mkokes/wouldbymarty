@@ -1,9 +1,9 @@
-// Build-time Instagram sync for the static export.
+// Build-time Instagram sync for the static site.
 //
-// Fetches the profile and latest posts from the Instagram API (with Instagram
-// Login), downloads each post's image into public/instagram/ (Instagram CDN URLs
-// are signed and expire, so a static page can't hotlink them), and writes
-// src/data/instagram.json for the page to read at build time.
+// Fetches the profile, the latest posts and the hero reel from the Instagram API
+// (with Instagram Login), stores optimized copies of the media in
+// public/instagram/ (Instagram CDN URLs are signed and expire, so a static page
+// can't hotlink them), and writes src/data/instagram.json for the app.
 //
 // When running in GitHub Actions with GH_SECRETS_TOKEN set, the long-lived
 // access token is refreshed and written back to the INSTAGRAM_ACCESS_TOKEN
@@ -11,21 +11,32 @@
 // from expiring (60-day lifetime).
 //
 // Never fails the build: on any error it keeps the previous data (or writes an
-// empty feed), and the page renders without the grid.
+// empty feed), and the page renders without Instagram content.
 
 import { spawnSync } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 const GRAPH_URL = 'https://graph.instagram.com';
 const API_VERSION = 'v22.0';
-const MEDIA_LIMIT = 12;
+// One featured post plus a 12-tile grid, with room to skip the hero if it's recent.
+const MEDIA_LIMIT = 14;
+// The post shown in the hero. Reels play as a muted looping video.
+const HERO_SHORTCODE = 'Dcc28iuulEv';
+const HERO_SEARCH_PAGES = 10;
+const MAX_VIDEO_BYTES = 30 * 1024 * 1024;
+const POST_WIDTHS = [480, 960];
+const POSTER_WIDTHS = [960, 1920];
+const AVATAR_WIDTHS = [160, 320];
 const TOKEN_VARIABLE = 'INSTAGRAM_ACCESS_TOKEN';
+const MEDIA_FIELDS = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp';
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dataFile = path.join(webRoot, 'src/data/instagram.json');
 const imageDir = path.join(webRoot, 'public/instagram');
+const tmpDir = `${imageDir}.tmp`;
 
 async function exists(file) {
   try {
@@ -36,11 +47,15 @@ async function exists(file) {
   }
 }
 
-async function graphGet(endpoint, params, token) {
-  const query = new URLSearchParams({ ...params, access_token: token });
-  const res = await fetch(`${GRAPH_URL}/${API_VERSION}/${endpoint}?${query}`);
-  if (!res.ok) throw new Error(`GET ${endpoint} failed: ${res.status} ${await res.text()}`);
+async function getJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`GET ${new URL(url).pathname} failed: ${res.status} ${await res.text()}`);
   return res.json();
+}
+
+function graphUrl(endpoint, params, token) {
+  const query = new URLSearchParams({ ...params, access_token: token });
+  return `${GRAPH_URL}/${API_VERSION}/${endpoint}?${query}`;
 }
 
 function saveTokenSecret(token) {
@@ -85,44 +100,113 @@ async function refreshToken(token) {
   }
 }
 
-async function download(url, file) {
+async function download(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`image download failed: ${res.status}`);
-  await fs.writeFile(file, Buffer.from(await res.arrayBuffer()));
+  if (!res.ok) throw new Error(`download failed: ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+/**
+ * Writes WebP renditions at each width (never upscaling) plus a tiny blurred
+ * placeholder, and returns what the app needs to render a responsive <img>.
+ */
+async function optimizeImage(buffer, name, widths) {
+  const { width: sourceWidth, height: sourceHeight } = await sharp(buffer).metadata();
+  const targets = [...new Set(widths.map((w) => Math.min(w, sourceWidth)))];
+
+  const variants = [];
+  for (const width of targets) {
+    const file = `${name}-${width}.webp`;
+    await sharp(buffer).resize({ width }).webp({ quality: 74 }).toFile(path.join(tmpDir, file));
+    variants.push({ width, src: `/instagram/${file}` });
+  }
+
+  const placeholder = await sharp(buffer).resize({ width: 24 }).webp({ quality: 40 }).toBuffer();
+  const largest = variants.at(-1);
+  return {
+    src: largest.src,
+    srcSet: variants.map((v) => `${v.src} ${v.width}w`).join(', '),
+    width: largest.width,
+    height: Math.round((sourceHeight / sourceWidth) * largest.width),
+    placeholder: `data:image/webp;base64,${placeholder.toString('base64')}`,
+  };
+}
+
+function stillUrl(item) {
+  // Videos expose a still via thumbnail_url; images and carousels (cover) via media_url.
+  return item.media_type === 'VIDEO' ? item.thumbnail_url : item.media_url;
+}
+
+function shortcode(permalink) {
+  return permalink?.match(/\/(?:p|reels?|tv)\/([^/?#]+)/)?.[1] ?? null;
+}
+
+async function findHero(firstPage) {
+  let page = firstPage;
+  for (let i = 0; i < HERO_SEARCH_PAGES && page; i++) {
+    const match = page.data?.find((item) => shortcode(item.permalink) === HERO_SHORTCODE);
+    if (match) return match;
+    page = page.paging?.next ? await getJson(page.paging.next) : null;
+  }
+  console.warn(`[instagram] hero post ${HERO_SHORTCODE} not found; using the latest post`);
+  return null;
+}
+
+async function buildHero(item) {
+  const poster = await optimizeImage(await download(stillUrl(item)), `hero-${item.id}`, POSTER_WIDTHS);
+  let video = null;
+  if (item.media_type === 'VIDEO' && item.media_url) {
+    try {
+      const buffer = await download(item.media_url);
+      if (buffer.length <= MAX_VIDEO_BYTES) {
+        const file = `hero-${item.id}.mp4`;
+        await fs.writeFile(path.join(tmpDir, file), buffer);
+        video = `/instagram/${file}`;
+      } else {
+        console.warn(`[instagram] hero video is ${buffer.length} bytes; using the still only`);
+      }
+    } catch (error) {
+      console.warn('[instagram] hero video skipped:', error.message);
+    }
+  }
+  return { id: item.id, caption: item.caption ?? null, permalink: item.permalink, poster, video };
 }
 
 async function sync(token) {
-  const profile = await graphGet('me', { fields: 'username,name,biography' }, token);
-  const media = await graphGet(
-    'me/media',
-    { fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp', limit: String(MEDIA_LIMIT) },
-    token,
-  );
+  const profile = await getJson(graphUrl('me', { fields: 'username,name,biography,profile_picture_url' }, token));
+  const firstPage = await getJson(graphUrl('me/media', { fields: MEDIA_FIELDS, limit: String(MEDIA_LIMIT) }, token));
 
-  const tmpDir = `${imageDir}.tmp`;
   await fs.rm(tmpDir, { recursive: true, force: true });
   await fs.mkdir(tmpDir, { recursive: true });
 
   const posts = [];
-  for (const item of media.data ?? []) {
-    // Videos expose a still via thumbnail_url; images and carousels (cover) via media_url.
-    const source = item.media_type === 'VIDEO' ? item.thumbnail_url : item.media_url;
+  for (const item of firstPage.data ?? []) {
+    const source = stillUrl(item);
     if (!source) continue;
-    const filename = `${item.id}.jpg`;
     try {
-      await download(source, path.join(tmpDir, filename));
+      posts.push({
+        id: item.id,
+        caption: item.caption ?? null,
+        mediaType: item.media_type,
+        image: await optimizeImage(await download(source), item.id, POST_WIDTHS),
+        permalink: item.permalink,
+        timestamp: item.timestamp,
+      });
     } catch (error) {
       console.warn(`[instagram] skipping post ${item.id}:`, error.message);
-      continue;
     }
-    posts.push({
-      id: item.id,
-      caption: item.caption ?? null,
-      mediaType: item.media_type,
-      image: `/instagram/${filename}`,
-      permalink: item.permalink,
-      timestamp: item.timestamp,
-    });
+  }
+
+  const heroItem = (await findHero(firstPage)) ?? firstPage.data?.[0];
+  const hero = heroItem ? await buildHero(heroItem) : null;
+
+  let avatar = null;
+  if (profile.profile_picture_url) {
+    try {
+      avatar = await optimizeImage(await download(profile.profile_picture_url), 'avatar', AVATAR_WIDTHS);
+    } catch (error) {
+      console.warn('[instagram] avatar skipped:', error.message);
+    }
   }
 
   await fs.rm(imageDir, { recursive: true, force: true });
@@ -130,7 +214,13 @@ async function sync(token) {
 
   return {
     fetchedAt: new Date().toISOString(),
-    profile: { username: profile.username, name: profile.name ?? null, biography: profile.biography ?? null },
+    profile: {
+      username: profile.username,
+      name: profile.name ?? null,
+      biography: profile.biography ?? null,
+      avatar,
+    },
+    hero,
     posts,
   };
 }
@@ -145,15 +235,16 @@ async function main() {
     try {
       const feed = await sync(await refreshToken(token));
       await fs.writeFile(dataFile, JSON.stringify(feed, null, 2));
-      console.log(`[instagram] synced ${feed.posts.length} posts`);
+      console.log(`[instagram] synced ${feed.posts.length} posts${feed.hero?.video ? ' and the hero video' : ''}`);
       return;
     } catch (error) {
       console.error('[instagram] sync failed:', error.message);
+      await fs.rm(tmpDir, { recursive: true, force: true });
     }
   }
 
   if (!(await exists(dataFile))) {
-    await fs.writeFile(dataFile, JSON.stringify({ fetchedAt: null, profile: null, posts: [] }, null, 2));
+    await fs.writeFile(dataFile, JSON.stringify({ fetchedAt: null, profile: null, hero: null, posts: [] }, null, 2));
   }
 }
 

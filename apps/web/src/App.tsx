@@ -1,55 +1,72 @@
+import { useEffect } from 'react';
+import { About } from './components/About';
+import { FeaturedPost } from './components/FeaturedPost';
+import { Hero } from './components/Hero';
 import { InstagramGrid } from './components/InstagramGrid';
-import type { InstagramFeed } from './lib/instagram';
-import { FALLBACK_BIO, INSTAGRAM_HANDLE, INSTAGRAM_URL, SITE_TAGLINE } from './lib/site';
+import { ThemeToggle } from './components/ThemeToggle';
+import { arrangePosts, type InstagramFeed } from './lib/instagram';
+import { initReveal } from './lib/reveal';
+import { FALLBACK_BIO, INSTAGRAM_HANDLE, INSTAGRAM_URL } from './lib/site';
 
 const YEAR = new Date().getFullYear();
 
 export function App({ feed }: { feed: InstagramFeed }) {
-  const { profile, posts } = feed;
+  const { profile, hero } = feed;
+  const { featured, grid } = arrangePosts(feed);
+
+  // After hydration, so the classes it adds don't count as hydration mismatches.
+  useEffect(() => {
+    initReveal();
+  }, []);
 
   return (
     <>
       <header className="site-header">
-        <a href="/" className="wordmark" aria-label="Would? By Marty home">
-          <span className="wordmark__title">Would?</span>
-          <span className="wordmark__byline">By Marty</span>
-        </a>
-        <a className="site-header__link" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-          @{INSTAGRAM_HANDLE}
-        </a>
+        <nav className="site-nav" aria-label="Main">
+          {featured && <a href="#work">Work</a>}
+          <a href="#about">About</a>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+            Instagram
+          </a>
+        </nav>
+        <ThemeToggle />
       </header>
 
       <main>
-        <div className="container">
-          <section className="hero">
-            <p className="hero__tagline">{SITE_TAGLINE}</p>
-            <p className="hero__bio">{profile?.biography || FALLBACK_BIO}</p>
-            <a className="btn btn-primary" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-              Follow @{INSTAGRAM_HANDLE} on Instagram
-            </a>
-          </section>
+        <Hero hero={hero} bio={profile?.biography || FALLBACK_BIO} />
 
-          {posts.length > 0 && (
-            <section className="feed" aria-labelledby="feed-heading">
-              <h2 id="feed-heading" className="feed__heading">
-                Latest from the shop
-              </h2>
-              <InstagramGrid posts={posts} />
-              <div className="feed__more">
-                <a className="btn btn-secondary" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-                  See more on Instagram
-                </a>
-              </div>
-            </section>
-          )}
+        {featured && (
+          <section id="work" className="work container" aria-labelledby="work-heading">
+            <h2 id="work-heading" className="section-heading" data-reveal>
+              Latest from the shop
+            </h2>
+            <FeaturedPost post={featured} />
+            {grid.length > 0 && (
+              <>
+                <h3 className="subsection-heading" data-reveal>
+                  More from the bench
+                </h3>
+                <InstagramGrid posts={grid} />
+              </>
+            )}
+            <div className="work__more" data-reveal>
+              <a className="btn btn-secondary" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                See everything on Instagram
+              </a>
+            </div>
+          </section>
+        )}
+
+        <div className="container">
+          <About profile={profile} />
         </div>
       </main>
 
       <footer className="site-footer">
-        <span suppressHydrationWarning>© {YEAR} Would? By Marty</span>
-        <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-          Instagram
-        </a>
+        <span className="site-footer__mark">Would?</span>
+        <span suppressHydrationWarning>
+          © {YEAR} Would? By Marty · @{INSTAGRAM_HANDLE}
+        </span>
       </footer>
     </>
   );

@@ -16,6 +16,7 @@ For now the site is a static, installable landing page powered by the @wouldbyma
 - [x] Move from Next.js/ESLint to Vite, Vitest, oxlint and oxfmt; React 19, TypeScript 7
 - [x] Build-time pre-rendering with client hydration
 - [x] Husky pre-push hook (lint + tests)
+- [x] Warm workshop redesign: video hero, featured post, About section, 3-way theme toggle, scroll reveals, optimized WebP images
 
 ### To do
 - [ ] Switch the Instagram account to Business/Creator and create the Meta app (see README)
