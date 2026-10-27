@@ -4,69 +4,72 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WouldByMarty is an e-commerce storefront for custom woodworking crafts. It's an npm/Turborepo monorepo: a Next.js web app (`apps/web`), a scaffolded-but-not-yet-built Expo mobile app (`apps/mobile`), a shared UI package (`packages/ui`), and a Convex backend (`convex/`) at the repo root. Auth is Clerk, payments are Stripe.
+WouldByMarty is a single-page landing site for a custom woodworking shop. It's populated with posts from the @wouldbymarty Instagram account, and it's an installable PWA hosted on **GitLab Pages**. It's an npm/Turborepo monorepo with one app, a Vite + React 19 + TypeScript 7 SPA in `apps/web`.
+
+The site used to be an e-commerce storefront (Next.js, Convex, Clerk, Stripe, MSW mocks, Expo mobile scaffold, `packages/ui`). All of that was removed from `main`. It's preserved on the `ecommerce-archive` branch and the `ecommerce-v0` tag. Restore from there rather than rebuilding if the shop comes back. `archive/` holds an even older Medusa-based attempt and is not part of the build.
 
 ## Commands
 
-Run from the repo root unless noted.
+From the repo root, these run through Turbo:
 
 ```bash
-npm install              # install all workspaces
-
-npm run dev               # turbo: run dev for every app in parallel
-npm run build             # turbo: build every app
-npm run lint               # turbo: lint every app
-npm run clean              # turbo: clean build outputs
-
-# Web app only (fastest path for most frontend work)
-cd apps/web
-npm run dev                # Next.js dev server on :3000
-npm run build
-npm run start               # serve production build
-npm run lint
-
-# Convex backend
-npx convex dev              # start Convex dev deployment, regenerates convex/_generated
-
-# Mobile (scaffold only, see Architecture below)
-cd apps/mobile
-npx expo start
+npm install
+npm run build          # Instagram sync + tsc + vite build + pre-render -> apps/web/dist
+npm test               # vitest
+npm run typecheck      # tsc --noEmit (TypeScript 7 / native compiler)
+npm run lint           # oxlint
+npm run format         # oxfmt (write); format:check to verify
 ```
 
-There is no test suite configured anywhere in this repo (no Jest/Vitest/Playwright config, no `test` script in any `package.json`). Don't assume one exists.
+Inside `apps/web`:
+- `npm run dev` starts the Vite dev server on :5173.
+- `npm run preview` serves `dist/`. Use it to test the service worker.
+- `npm run test:watch` runs Vitest in watch mode.
+
+A husky `pre-push` hook (`.husky/pre-push`) runs `npm run lint` and `npm test`. `npm install` installs it through the root `prepare` script. CI sets `HUSKY=0` and runs lint, format check, tests and build, in that order. Keep all of them green.
+
+## Tooling
+
+- **Vite 8** with `@vitejs/plugin-react`. Vitest is configured in the same `vite.config.ts` (jsdom environment, `src/test/setup.ts` loads jest-dom matchers and RTL cleanup).
+- **oxlint** (`.oxlintrc.json`): correctness rules are errors, suspicious rules are warnings. The react, typescript, import, jsx-a11y and vitest plugins are enabled. `react-in-jsx-scope` is off because the project uses the automatic JSX runtime.
+- **oxfmt** (`.oxfmtrc.json`): single quotes, 120-column lines. Run `npm run format` rather than hand-formatting.
+- Tests sit next to the source as `*.test.ts(x)`. Components take data as props (e.g. `App` receives `feed`), so they can be tested without the generated JSON.
 
 ## Architecture
 
-### The web app currently runs on mock data, not Convex
+### Static, pre-rendered SPA: there is no server at runtime
 
-This is the most important thing to know before touching `apps/web`. A full Convex backend exists (`convex/schema.ts`, `convex/functions/{products,carts,orders}.ts`, `convex/auth.config.ts` for Clerk JWT validation), and `ConvexClientProvider` (`apps/web/src/app/ConvexClientProvider.tsx`) wraps the app in a `ConvexReactClient`. But no page or component currently calls `useQuery`/`useMutation`/`useAction` against it. Instead:
+GitLab Pages serves the files in `apps/web/dist`. `index.html` holds the meta, Open Graph, manifest and icon tags, plus an `<!--app-html-->` placeholder inside `#root`.
 
-- Product data is served by MSW (Mock Service Worker) handlers in `apps/web/src/mocks/handlers/index.ts`, which intercept `fetch('/api/products')` in the browser during dev. Pages call this through `apps/web/src/lib/api.ts` (`fetchProducts`, `fetchProductById`), not through Convex queries. There is no real `/api/products` Next.js route — it only resolves because MSW's service worker intercepts it client-side.
-- Cart state is persisted to `localStorage` (see `CartDrawer.tsx` and `cart/page.tsx`), not the Convex `carts` table.
-- Orders page uses local/mock data, not the Convex `orders` functions.
+- After `vite build`, `scripts/prerender.mjs` does an SSR build of `src/entry-server.tsx` with Vite's API (into a temporary `dist-ssr/`). It calls `render()` (`renderToString`) and writes the HTML into the placeholder in `dist/index.html`.
+- `src/main.tsx` hydrates when `#root` already has markup (production), and otherwise does a client render (the dev server). It also registers the service worker in production.
+- Rendering must be deterministic between the build and the browser, or hydration will mismatch. `entry-server.test.tsx` hydrates the server HTML and fails on recoverable errors. The footer year uses `suppressHydrationWarning`, because a build can straddle New Year.
 
-When wiring a page up to real persistence, the corresponding Convex function usually already exists in `convex/functions/` — reconcile its shape with the mock types in `apps/web/src/lib/api.ts` / `apps/web/src/mocks/handlers/index.ts` rather than assuming they already match.
+### Instagram data is fetched at build time
 
-### Payments are plain Stripe, not `@convex-dev/stripe`
+- `apps/web/scripts/fetch-instagram.mjs` runs as `predev`/`prebuild`. It loads `.env.local` via `node --env-file-if-exists`.
+  - It calls `graph.instagram.com` and downloads each post's image into `public/instagram/<id>.jpg`. Instagram CDN URLs are signed and expire, so the static page must not hotlink them.
+  - It writes `src/data/instagram.json`. Both outputs are git-ignored.
+  - It never fails the build. On an error it keeps the previous data, or writes an empty feed.
+  - In GitLab CI with `GITLAB_API_TOKEN` set, it refreshes the 60-day Instagram token and PUTs it back to the `INSTAGRAM_ACCESS_TOKEN` project variable.
+- `src/lib/instagram.ts` pulls the JSON in through an eager `import.meta.glob`. That resolves to `{}` when the file is missing, so a missing file isn't an error. `normalizeFeed()` fills in the defaults.
+- Freshness comes from a scheduled GitLab pipeline (daily), not from runtime fetching.
 
-Checkout and webhook handling are implemented as Next.js Route Handlers using the `stripe` npm package directly:
-- `apps/web/src/app/api/checkout/route.ts` creates the Checkout Session.
-- `apps/web/src/app/api/webhooks/stripe/route.ts` verifies the signature and handles webhook events.
+### PWA
 
-`@convex-dev/stripe` is listed in `apps/web/package.json` but isn't used anywhere yet — that Convex-native integration hasn't been built. Don't assume payment logic lives in `convex/`.
+- `public/manifest.webmanifest` holds the manifest, and the icons are in `public/icons/`.
+- `public/sw.js` is a hand-written service worker:
+  - Navigations are network-first, with an offline fallback to the cached `/`.
+  - Vite's hashed `/assets/*` files are cache-first.
+  - Other same-origin assets are stale-while-revalidate.
+  - Bump `VERSION` when you change caching behaviour.
 
-### `packages/ui` is an empty placeholder
+### Other
 
-It exists as a shared-component target (`src/index.ts`) but currently has no components and isn't imported by `apps/web` or `apps/mobile`. Path aliases for it (`@/ui`) are already configured in `apps/web/tsconfig.json` if this gets built out.
-
-### Environment variable naming is nonstandard
-
-Server-only secrets use a `NEXT_` prefix instead of no prefix (e.g. `NEXT_CLERK_SECRET_KEY`, `NEXT_STRIPE_SECRET_KEY`, `NEXT_CONVEX_DEPLOYMENT`) — this deviates from Next.js's usual convention where only client-exposed vars get a prefix (`NEXT_PUBLIC_*`). Match this existing convention when adding new server env vars rather than "fixing" it in isolation.
-
-### Mobile app is scaffold-only
-
-`apps/mobile` has a `package.json` (Expo SDK 52, Expo Router, Convex, `@clerk/clerk-expo`) but no `app/` directory or screens yet. The approved design for building it out is in `docs/superpowers/specs/2026-04-28-mobile-app-design.md` — read that before starting mobile work rather than re-deriving the screen structure from scratch.
+- `src/lib/site.ts` holds the handle, profile URL, tagline and fallback bio.
+- Styling is plain CSS classes in `src/styles.css`, using CSS custom properties. There's one palette ("Modern Artisan"), and dark mode follows `prefers-color-scheme`.
+- Any env var the build needs must be listed in `turbo.json` → `tasks.build.passThroughEnv`, or Turbo will strip it.
 
 ### Deployment
 
-The target deployment platform is Coolify (a VPS at `dash.martykokes.com`), not Vercel, despite older mentions of Vercel elsewhere — build command `cd apps/web && npm run build`, start command `cd apps/web && npm run start`, domain `wouldbymarty.com`, auto-deploy on push to `main`. Per `ROADMAP.md` the Coolify setup itself is still an unchecked task, so don't assume it's live yet. See `AGENTS.md` for the full environment variable matrix.
+`.gitlab-ci.yml` defines the `pages` job. It runs on the default branch and on schedules, checks and builds `apps/web`, and publishes `dist/` as `public/`. See the README for the CI variables, the pipeline schedule and the custom domain setup. The site assumes it's served from the domain root; Vite's `base` is the default `/`.

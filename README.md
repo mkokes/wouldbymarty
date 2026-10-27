@@ -1,194 +1,60 @@
-# WouldByMarty - E-Commerce Store
+# Would? By Marty
 
-## Project Overview
+Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site is a single page: a short intro, a grid of the latest posts from the [@wouldbymarty](https://www.instagram.com/wouldbymarty/) Instagram account, and a "Follow on Instagram" call to action. It's an installable PWA, hosted on GitLab Pages.
 
-A full-stack e-commerce platform for "WouldByMarty" - a custom woodworking crafts store. Built with a modern, unified architecture using Convex as the universal backend, Next.js for the web storefront, and Expo for the mobile app.
+> The previous e-commerce build (Convex + Clerk + Stripe storefront and an Expo mobile scaffold) is preserved on the `ecommerce-archive` branch and the `ecommerce-v0` tag.
 
-## Tech Stack
+## Tech stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend (Web)** | Next.js 14+ (App Router) | Web storefront |
-| **Frontend (Mobile)** | Expo SDK 52+ (Expo Router) | Native mobile app |
-| **Backend** | Convex | Server functions, database, real-time |
-| **Authentication** | Clerk | User authentication & management |
-| **Payments** | Stripe + Venmo | Payment processing |
-| **Monorepo** | Turborepo | Code sharing between web/mobile |
-| **Hosting** | Coolify (web, VPS at dash.martykokes.com), EAS (mobile) | Deployment |
+| Layer | Technology |
+|-------|------------|
+| Web | Vite 8, React 19, TypeScript 7 (static SPA) |
+| Content | Instagram API with Instagram Login, fetched **at build time** |
+| PWA | Web app manifest + hand-written service worker (`public/sw.js`) |
+| Hosting | GitLab Pages, rebuilt daily by a scheduled pipeline |
+| Tooling | Vitest, oxlint, oxfmt |
+| Monorepo | Turborepo (single app: `apps/web`) |
 
-## Architecture
+## Getting started
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     MONOREPO (Turborepo)                   │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Web App   │  │ Mobile App  │  │   Shared Code       │ │
-│  │  (Next.js)  │  │   (Expo)    │  │ (components/hooks)  │ │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
-│                            │                                 │
-│                   ┌────────▼────────┐                       │
-│                   │  Convex Backend  │                       │
-│                   │  (Server Funcs)  │                       │
-│                   │  + Built-in DB   │                       │
-│                   └────────┬────────┘                       │
-│                            │                                 │
-│         ┌──────────────────┼──────────────────┐             │
-│         │                  │                  │             │
-│  ┌──────▼──────┐  ┌───────▼───────┐  ┌──────▼──────┐     │
-│  │   Stripe    │  │ Clerk Auth    │  │ File Storage│     │
-│  │  Payments   │  │               │  │             │     │
-│  └─────────────┘  └───────────────┘  └─────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Project Structure
-
-```
-wouldbymarty/
-├── apps/
-│   ├── web/                    # Next.js web application
-│   │   ├── src/
-│   │   │   ├── app/            # App Router pages
-│   │   │   ├── components/     # UI components
-│   │   │   └── lib/            # Utilities
-│   │   └── package.json
-│   │
-│   └── mobile/                 # Expo mobile application
-│       ├── app/                # Expo Router pages
-│       ├── components/         # UI components
-│       └── package.json
-│
-├── packages/
-│   └── ui/                    # Shared UI components
-│
-├── convex/                    # Convex backend
-│   ├── schema.ts              # Database schema
-│   ├── functions/             # Queries & mutations
-│   └── http.ts                # Webhooks
-│
-├── turbo.json
-├── package.json
-└── .env.example
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/mkokes/wouldbymarty.git
-   cd wouldbymarty
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables:
-   ```bash
-   # Copy the example env file
-   cp .env.example .env.local
-   
-   # Edit .env.local with your API keys
-   # Required keys are in apps/web/.env.example
-   ```
-
-### Running the Development Server
-
-**Web App (recommended for initial setup):**
 ```bash
+npm install
+cp apps/web/.env.example apps/web/.env.local   # add your Instagram token
 cd apps/web
-npm run dev
-```
-Then open http://localhost:3000
-
-**Mobile App:**
-```bash
-cd apps/mobile
-npm run dev
+npm run dev        # http://localhost:5173 (syncs Instagram first)
+npm run build      # pre-rendered static site in apps/web/dist
+npm run preview    # serve apps/web/dist locally
+npm test           # vitest
+npm run lint       # oxlint
+npm run format     # oxfmt
 ```
 
-**All apps (Turborepo):**
-```bash
-npm run dev
-```
+`predev` and `prebuild` run `scripts/fetch-instagram.mjs`. It downloads the latest 12 posts into `public/instagram/` and writes `src/data/instagram.json`. Both are git-ignored. Without a token the site still builds: the grid is hidden, and the intro uses the fallback copy in `src/lib/site.ts`.
 
-### Development Mode (with Mock Data)
+A husky pre-push hook runs lint and tests before every `git push`. It's installed automatically by `npm install`.
 
-The web app uses MSW (Mock Service Worker) to mock API calls (`apps/web/src/mocks/handlers/`) intercepted client-side in the browser; there is no real `/api/products` route. Cart state persists to `localStorage`, and orders use mock data too. This is the app's current state everywhere it runs, not just in development — see [CLAUDE.md](CLAUDE.md) for the full picture.
+The production build pre-renders the page into `index.html` (`scripts/prerender.mjs`), so the content is in the HTML for search engines and link previews. The browser then hydrates it.
 
-To modify mock data, edit `apps/web/src/mocks/handlers/index.ts`.
+The service worker only registers in production builds. To test the PWA, run `npm run build && npm run preview`.
 
-### Connecting to Convex (Not Yet Wired Up)
+## Instagram token setup
 
-A Convex backend already exists (`convex/schema.ts`, `convex/functions/`) and `ConvexClientProvider` wraps the app, but no page currently calls it — see `CLAUDE.md` for details. To stand up a Convex dev deployment while working on wiring this in:
+1. **Switch the account to Business or Creator.** In the Instagram app, go to Settings → Account type and tools.
+2. **Create a Meta app.** At [developers.facebook.com](https://developers.facebook.com/apps), create an app and add the **Instagram** product, choosing "API setup with Instagram login".
+3. **Add the account and generate a token.** Under *Generate access tokens*, add @wouldbymarty (accept the tester invite in Instagram if prompted), then generate a token. The token from this screen is long-lived (60 days).
 
-1. Set up Convex:
-   ```bash
-   npx convex dev
-   ```
+The app only needs the `instagram_business_basic` permission. It doesn't need app review, because it only reads your own account.
 
-2. Update your environment variables in `apps/web/.env.local` with your Convex deployment URL.
+## Deploying to GitLab Pages
 
-## Environment Variables
+The pipeline is defined in `.gitlab-ci.yml`. It runs on the default branch, installs, builds, and runs lint, format check and tests, builds, and publishes `apps/web/dist` as Pages.
 
-The project uses the following environment variables. For development, a `.env.local` file is already configured with mock data support.
-
-```env
-# Convex (optional - uses mock data if not set)
-NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
-NEXT_CONVEX_DEPLOYMENT=dev:your-project
-
-# Clerk Authentication (required for auth)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-NEXT_CLERK_SECRET_KEY=sk_test_...
-NEXT_CLERK_JWT_ISSUER_DOMAIN=https://your-org.clerk.accounts.dev
-
-# Stripe Payments (optional - for payment testing)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-NEXT_STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-```
-
-For development with mock data, you can use the app without configuring Clerk or Convex. The mock MSW handlers will serve data locally.
-
-## Features
-
-- Product catalog with categories (furniture, decor, kitchen, wall-art, custom)
-- Shopping cart (persisted to `localStorage` today; Convex-backed sync is built on the backend but not yet wired into the frontend)
-- Checkout with Stripe payments (Next.js Route Handlers, not yet migrated to `@convex-dev/stripe`)
-- User authentication (Clerk)
-- Order history (mock data today; Convex `orders` functions exist and are ready to wire in)
-- Mobile app - not yet built (Expo project scaffolded; see `docs/superpowers/specs/2026-04-28-mobile-app-design.md` for the approved design)
-
-### Planned / not yet implemented
-- Venmo payment option via Stripe
-- Real-time inventory updates and cart sync via Convex
-- Mobile app screens
-
-## Custom Attributes for Woodworking
-
-- **Wood Type**: walnut, oak, maple, cherry, ash, etc.
-- **Finish**: matte, glossy, natural oil, lacquer, etc.
-- **Dimensions**: L x W x H
-- **Weight**
-
-## Development Phases
-
-1. Infrastructure Setup (Convex + Clerk)
-2. Database Schema & Backend Functions
-3. Web Storefront (Next.js)
-4. Mobile App (Expo)
-5. Payment Integration (Stripe + Venmo)
-6. Deployment
+1. **Push the repo to GitLab.** You can make GitLab the primary remote, or mirror it from GitHub.
+2. **Add the CI/CD variables** (Settings → CI/CD → Variables, masked, not protected unless `main` is protected):
+   - `INSTAGRAM_ACCESS_TOKEN`: the token from above.
+   - `GITLAB_API_TOKEN`: a project access token with the Maintainer role and `api` scope. The build uses it to save the refreshed Instagram token back to the variable above, which keeps it from expiring.
+3. **Add a pipeline schedule** (Build → Pipeline schedules), e.g. daily at 06:00, targeting `main`. This picks up new posts and refreshes the token.
+4. **Custom domain** (Deploy → Pages → Domains): add `wouldbymarty.com`, create the DNS records GitLab shows, and enable automatic HTTPS. The site assumes it's served from the domain root. That's the case for a custom domain or GitLab's "unique domain" setting, but not for a `namespace.gitlab.io/project` subpath.
 
 ## License
 

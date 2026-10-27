@@ -5,9 +5,8 @@ node_modules/
 
 # Build
 dist/
+dist-ssr/
 build/
-.next/
-out/
 
 # Environment
 .env
@@ -39,3 +38,13 @@ Thumbs.db
 
 # Medusa
 *.lock
+
+# TypeScript
+*.tsbuildinfo
+
+# Turborepo
+.turbo/
+
+# Generated at build time from Instagram
+apps/web/src/data/instagram.json
+apps/web/public/instagram/

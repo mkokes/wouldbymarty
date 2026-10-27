@@ -1,0 +1,30 @@
+# Builds the static site and publishes it to GitLab Pages.
+#
+# Runs on pushes to the default branch and on scheduled pipelines. Add a daily
+# schedule (Build > Pipeline schedules) so new Instagram posts show up and the
+# Instagram access token keeps getting refreshed before it expires.
+#
+# CI/CD variables (Settings > CI/CD > Variables, masked):
+#   INSTAGRAM_ACCESS_TOKEN  long-lived Instagram token
+#   GITLAB_API_TOKEN             project access token (Maintainer, `api` scope) used to
+#                                save the refreshed Instagram token back to the variable above
+
+pages:
+  image: node:22-alpine
+  variables:
+    HUSKY: "0"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - cd apps/web && npm run lint && npm run format:check && npm test && npm run build && cd ../..
+    - rm -rf public && mv apps/web/dist public
+  artifacts:
+    paths:
+      - public

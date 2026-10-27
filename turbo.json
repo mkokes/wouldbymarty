@@ -6,18 +6,36 @@
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", ".expo/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        "dist/**"
+      ],
+      "passThroughEnv": [
+        "INSTAGRAM_ACCESS_TOKEN",
+        "GITLAB_API_TOKEN",
+        "CI_API_V4_URL",
+        "CI_PROJECT_ID"
+      ],
+      "cache": false
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
+    "lint": {},
     "clean": {
+      "cache": false
+    },
+    "test": {},
+    "typecheck": {},
+    "format:check": {},
+    "format": {
       "cache": false
     }
   }
