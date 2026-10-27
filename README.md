@@ -1,6 +1,6 @@
 # Would? By Marty
 
-Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site is a single page: a short intro, a grid of the latest posts from the [@wouldbymarty](https://www.instagram.com/wouldbymarty/) Instagram account, and a "Follow on Instagram" call to action. It's an installable PWA, hosted on GitLab Pages.
+Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site is a single page: a short intro, a grid of the latest posts from the [@wouldbymarty](https://www.instagram.com/wouldbymarty/) Instagram account, and a "Follow on Instagram" call to action. It's an installable PWA, hosted on GitHub Pages.
 
 > The previous e-commerce build (Convex + Clerk + Stripe storefront and an Expo mobile scaffold) is preserved on the `ecommerce-archive` branch and the `ecommerce-v0` tag.
 
@@ -11,7 +11,7 @@ Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site i
 | Web | Vite 8, React 19, TypeScript 7 (static SPA) |
 | Content | Instagram API with Instagram Login, fetched **at build time** |
 | PWA | Web app manifest + hand-written service worker (`public/sw.js`) |
-| Hosting | GitLab Pages, rebuilt daily by a scheduled pipeline |
+| Hosting | GitHub Pages via GitHub Actions, rebuilt daily on a schedule |
 | Tooling | Vitest, oxlint, oxfmt |
 | Monorepo | Turborepo (single app: `apps/web`) |
 
@@ -45,16 +45,21 @@ The service worker only registers in production builds. To test the PWA, run `np
 
 The app only needs the `instagram_business_basic` permission. It doesn't need app review, because it only reads your own account.
 
-## Deploying to GitLab Pages
+## Deploying to GitHub Pages
 
-The pipeline is defined in `.gitlab-ci.yml`. It runs on the default branch, installs, builds, and runs lint, format check and tests, builds, and publishes `apps/web/dist` as Pages.
+The workflow is `.github/workflows/deploy.yml`.
+- On pull requests, it runs lint, format check, tests and build.
+- On pushes to `main`, it also deploys `apps/web/dist` to GitHub Pages.
+- It runs daily on a schedule (11:00 UTC), and can be started by hand from the Actions tab.
 
-1. **Push the repo to GitLab.** You can make GitLab the primary remote, or mirror it from GitHub.
-2. **Add the CI/CD variables** (Settings → CI/CD → Variables, masked, not protected unless `main` is protected):
-   - `INSTAGRAM_ACCESS_TOKEN`: the token from above.
-   - `GITLAB_API_TOKEN`: a project access token with the Maintainer role and `api` scope. The build uses it to save the refreshed Instagram token back to the variable above, which keeps it from expiring.
-3. **Add a pipeline schedule** (Build → Pipeline schedules), e.g. daily at 06:00, targeting `main`. This picks up new posts and refreshes the token.
-4. **Custom domain** (Deploy → Pages → Domains): add `wouldbymarty.com`, create the DNS records GitLab shows, and enable automatic HTTPS. The site assumes it's served from the domain root. That's the case for a custom domain or GitLab's "unique domain" setting, but not for a `namespace.gitlab.io/project` subpath.
+Pages is already enabled for this repo with **Source: GitHub Actions**, and `wouldbymarty.com` is set as the custom domain with HTTPS enforced. The remaining setup is two repository secrets (Settings → Secrets and variables → Actions):
+
+1. `INSTAGRAM_ACCESS_TOKEN`: the token from above.
+2. `GH_SECRETS_TOKEN`: a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) scoped to this repository, with the **Secrets: Read and write** permission. On each scheduled or `main` build, the workflow refreshes the Instagram token and saves it back to `INSTAGRAM_ACCESS_TOKEN` through `gh secret set`, so it never hits the 60-day expiry. Workflows' built-in `GITHUB_TOKEN` can't write secrets, which is why a separate token is needed. Fine-grained tokens expire, so set a long expiry and renew it before then.
+
+GitHub disables scheduled workflows after 60 days without repository activity. If that happens, re-enable the workflow from the Actions tab.
+
+The site assumes it's served from the domain root (Vite's default `base`), which holds for the custom domain.
 
 ## License
 

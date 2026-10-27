@@ -18,9 +18,9 @@
       ],
       "passThroughEnv": [
         "INSTAGRAM_ACCESS_TOKEN",
-        "GITLAB_API_TOKEN",
-        "CI_API_V4_URL",
-        "CI_PROJECT_ID"
+        "GH_SECRETS_TOKEN",
+        "GITHUB_ACTIONS",
+        "GITHUB_REPOSITORY"
       ],
       "cache": false
     },

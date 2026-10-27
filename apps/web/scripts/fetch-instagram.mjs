@@ -5,13 +5,15 @@
 // are signed and expire, so a static page can't hotlink them), and writes
 // src/data/instagram.json for the page to read at build time.
 //
-// When running in GitLab CI with GITLAB_API_TOKEN set, the long-lived access
-// token is refreshed and written back to the INSTAGRAM_ACCESS_TOKEN CI/CD
-// variable, so scheduled pipelines keep it from expiring (60-day lifetime).
+// When running in GitHub Actions with GH_SECRETS_TOKEN set, the long-lived
+// access token is refreshed and written back to the INSTAGRAM_ACCESS_TOKEN
+// repository secret (via `gh secret set`), so the scheduled workflow keeps it
+// from expiring (60-day lifetime).
 //
 // Never fails the build: on any error it keeps the previous data (or writes an
 // empty feed), and the page renders without the grid.
 
+import { spawnSync } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,9 +43,25 @@ async function graphGet(endpoint, params, token) {
   return res.json();
 }
 
+function saveTokenSecret(token) {
+  const { GH_SECRETS_TOKEN, GITHUB_REPOSITORY } = process.env;
+  // The value goes over stdin so it never appears in the process list.
+  const result = spawnSync('gh', ['secret', 'set', TOKEN_VARIABLE, '--repo', GITHUB_REPOSITORY], {
+    input: token,
+    env: { ...process.env, GH_TOKEN: GH_SECRETS_TOKEN },
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    console.warn(`[instagram] could not save refreshed token to GitHub secrets: ${result.stderr || result.error}`);
+  } else {
+    console.log('[instagram] access token refreshed and saved to GitHub secrets');
+  }
+}
+
 async function refreshToken(token) {
-  const { CI_API_V4_URL, CI_PROJECT_ID, GITLAB_API_TOKEN } = process.env;
-  if (!CI_API_V4_URL || !CI_PROJECT_ID || !GITLAB_API_TOKEN) return token;
+  const { GITHUB_ACTIONS, GITHUB_REPOSITORY, GH_SECRETS_TOKEN } = process.env;
+  // Without a place to persist it, refreshing would just strand the new token.
+  if (GITHUB_ACTIONS !== 'true' || !GITHUB_REPOSITORY || !GH_SECRETS_TOKEN) return token;
 
   try {
     const res = await fetch(
@@ -57,16 +75,9 @@ async function refreshToken(token) {
     const { access_token } = await res.json();
     if (!access_token) return token;
 
-    const update = await fetch(`${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${TOKEN_VARIABLE}`, {
-      method: 'PUT',
-      headers: { 'PRIVATE-TOKEN': GITLAB_API_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ value: access_token }),
-    });
-    if (!update.ok) {
-      console.warn(`[instagram] could not save refreshed token to GitLab: ${update.status}`);
-    } else {
-      console.log('[instagram] access token refreshed and saved to GitLab CI/CD variables');
-    }
+    // Keep the new token out of the workflow logs.
+    console.log(`::add-mask::${access_token}`);
+    saveTokenSecret(access_token);
     return access_token;
   } catch (error) {
     console.warn('[instagram] token refresh error', error);

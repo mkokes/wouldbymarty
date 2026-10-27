@@ -3,20 +3,20 @@
 ## Overview
 
 ```
-GitLab CI (push to main, or daily schedule)
+GitHub Actions (push to main, or daily schedule)
   └─ prebuild: scripts/fetch-instagram.mjs
-       ├─ refresh Instagram token ──▶ PUT back to GitLab CI/CD variable
+       ├─ refresh Instagram token ──▶ `gh secret set` back to the repository secret
        ├─ GET graph.instagram.com /me, /me/media
        ├─ download images ──▶ public/instagram/<id>.jpg
        └─ write src/data/instagram.json
-  └─ tsc + vite build + prerender (SSR → index.html) ──▶ dist/ ──▶ GitLab Pages ──▶ visitor (hydrates, PWA)
+  └─ tsc + vite build + prerender (SSR → index.html) ──▶ dist/ ──▶ GitHub Pages ──▶ visitor (hydrates, PWA)
 ```
 
-The site is fully static. There is no server, database or auth at runtime. The Instagram content is baked in at build time, and a scheduled pipeline keeps it fresh.
+The site is fully static. There is no server, database or auth at runtime. The Instagram content is baked in at build time, and a scheduled workflow keeps it fresh.
 
 ## Build-time sync
 
-1. The script reads `INSTAGRAM_ACCESS_TOKEN`. In CI with `GITLAB_API_TOKEN`, it first refreshes the token and saves the new one back to the project variable. Instagram tokens expire after 60 days, so a daily schedule keeps the token alive indefinitely.
+1. The script reads `INSTAGRAM_ACCESS_TOKEN`. In GitHub Actions with `GH_SECRETS_TOKEN`, it first refreshes the token and saves the new one back to the repository secret through `gh secret set`. The value is passed on stdin and masked in the logs. Instagram tokens expire after 60 days, so a daily schedule keeps the token alive indefinitely.
 2. It fetches the profile and the 12 most recent posts. It uses `media_url` for images and carousel covers, and `thumbnail_url` for videos.
 3. It downloads each image into `public/instagram/`. Instagram CDN URLs are signed and expire, so hotlinking them from a static page would break within days.
 4. It writes `src/data/instagram.json`, which Vite bundles into the app through `getInstagramFeed()` (`src/lib/instagram.ts`).
@@ -37,9 +37,9 @@ The site is fully static. There is no server, database or auth at runtime. The I
 
 ## Why this approach
 
-- **Static plus scheduled rebuilds:** GitLab Pages only serves files. A daily rebuild gives fresh content with no runtime infrastructure to maintain.
+- **Static plus scheduled rebuilds:** GitHub Pages only serves files. A daily rebuild gives fresh content with no runtime infrastructure to maintain.
 - **Self-hosted images:** this avoids broken images when the signed CDN URLs expire, and it lets the service worker cache them same-origin for offline use.
-- **The token is persisted in a CI variable:** the only state in the system is one refreshable token, and GitLab already stores it securely.
+- **The token is persisted as a repository secret:** the only state in the system is one refreshable token, and GitHub already stores it securely.
 
 ## History
 
