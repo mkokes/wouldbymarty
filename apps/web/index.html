@@ -5,8 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Would? By Marty - Handcrafted Woodworking</title>
     <meta name="description" content="Handcrafted woodworking by Marty: custom furniture, decor, and one-off pieces." />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#32324F" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6EFE4" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1C1410" />
+
+    <!-- Apply the saved theme and enable JS-only styles before first paint. Keep in sync with src/lib/theme.ts. -->
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        try {
+          var theme = localStorage.getItem('wbm-theme');
+          if (theme === 'light' || theme === 'dark') {
+            root.dataset.theme = theme;
+            var color = theme === 'dark' ? '#1C1410' : '#F6EFE4';
+            document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+              meta.content = color;
+            });
+          }
+        } catch (e) {}
+      })();
+    </script>
 
     <meta property="og:title" content="Would? By Marty" />
     <meta
@@ -16,6 +34,13 @@
     <meta property="og:url" content="https://wouldbymarty.com/" />
     <meta property="og:site_name" content="Would? By Marty" />
     <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Chango&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400&family=Montserrat:wght@400;500;600&display=swap"
+    />
 
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" href="/icons/favicon.png" />
