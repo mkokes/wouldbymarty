@@ -1,7 +1,7 @@
 # Agent Development Guide
 
 ## Project Context
-"WouldByMarty" is a landing page for a custom woodworking shop. The content is pulled from the @wouldbymarty Instagram account at build time. It's a static Vite + React SPA, an installable PWA, hosted on GitLab Pages. See `CLAUDE.md` for the architecture. The former e-commerce build lives on the `ecommerce-archive` branch.
+"WouldByMarty" is a landing page for a custom woodworking shop. The content is pulled from the @wouldbymarty Instagram account at build time. It's a static Vite + React SPA, an installable PWA, hosted on GitHub Pages. See `CLAUDE.md` for the architecture. The former e-commerce build lives on the `ecommerce-archive` branch.
 
 ## Key Files
 - `apps/web/src/App.tsx`: the landing page
@@ -10,21 +10,22 @@
 - `apps/web/scripts/fetch-instagram.mjs`: the build-time Instagram sync (posts, images, token refresh)
 - `apps/web/src/lib/instagram.ts`: reads the synced feed
 - `apps/web/public/manifest.webmanifest`, `apps/web/public/sw.js`: the PWA
-- `.gitlab-ci.yml`: the GitLab Pages pipeline
+- `.github/workflows/deploy.yml`: the GitHub Pages workflow
 
-## GitLab Pages Deployment
+## GitHub Pages Deployment
 
-### CI/CD Variables (Settings → CI/CD → Variables)
+### Repository secrets (Settings → Secrets and variables → Actions)
 
-| Variable | Value | Masked |
-|----------|-------|--------|
-| `INSTAGRAM_ACCESS_TOKEN` | Long-lived Instagram token (see README) | ✅ |
-| `GITLAB_API_TOKEN` | Project access token, Maintainer role, `api` scope | ✅ |
+| Secret | Value |
+|--------|-------|
+| `INSTAGRAM_ACCESS_TOKEN` | Long-lived Instagram token (see README) |
+| `GH_SECRETS_TOKEN` | Fine-grained PAT for this repo with "Secrets: Read and write" |
 
-### Pipeline
-- Push to the default branch → build → publish to Pages.
-- Pipeline schedule (daily) → re-sync Instagram, refresh the token, republish.
-- Custom domain: wouldbymarty.com (Deploy → Pages → Domains)
+### Workflow (`.github/workflows/deploy.yml`)
+- Pull request → lint, format check, tests, build (no deploy).
+- Push to `main` → the same checks, then deploy to Pages.
+- Daily schedule → re-sync Instagram, refresh the token, redeploy.
+- Custom domain: wouldbymarty.com, configured in Settings → Pages.
 
 ## Common Commands
 ```bash

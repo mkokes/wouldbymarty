@@ -1,0 +1,70 @@
+# Checks, builds and deploys the site to GitHub Pages.
+#
+# - Pull requests: lint, format check, tests and build only (no deploy, no token refresh).
+# - Pushes to main, the daily schedule and manual runs: also deploy. The schedule
+#   picks up new Instagram posts and refreshes the Instagram access token.
+#
+# Repository secrets (Settings > Secrets and variables > Actions):
+#   INSTAGRAM_ACCESS_TOKEN  long-lived Instagram token
+#   GH_SECRETS_TOKEN        fine-grained PAT for this repo with "Secrets: Read and write",
+#                           used to save the refreshed Instagram token back to the secret above
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  HUSKY: '0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint --workspace web
+      - name: Check formatting
+        run: npm run format:check --workspace web
+      - name: Test
+        run: npm test --workspace web
+      - name: Build
+        run: npm run build --workspace web
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          GH_SECRETS_TOKEN: ${{ github.event_name != 'pull_request' && secrets.GH_SECRETS_TOKEN || '' }}
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: apps/web/dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
