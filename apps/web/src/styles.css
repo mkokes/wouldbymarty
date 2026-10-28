@@ -642,40 +642,24 @@ button {
 }
 
 .about__photo {
-  position: relative;
+  --hexagon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 86.6 100'%3E%3Cpath d='M35.51 4.5Q43.3 0 51.1 4.5L78.81 20.5Q86.6 25 86.6 34L86.6 66Q86.6 75 78.81 79.5L51.1 95.5Q43.3 100 35.51 95.5L7.79 79.5Q0 75 0 66L0 34Q0 25 7.79 20.5Z'/%3E%3C/svg%3E");
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  border-radius: 16px;
-  background-color: var(--bg-alt);
-  box-shadow:
-    0 0 0 4px var(--surface),
-    0 0 0 6px var(--accent);
+  aspect-ratio: 0.866;
+  padding: 6px;
+  background-color: var(--accent);
+  mask: var(--hexagon) center / 100% 100% no-repeat;
 }
 
+/* Rounded hexagon, with the accent showing through as a thin border. */
 .about__photo img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* Honeycomb in the accent color, fading out before it reaches the face. */
-.about__photo::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: var(--accent);
-  opacity: 0.7;
-  pointer-events: none;
-  mask-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='50'%3E%3Cpath d='M14 33L0 25V8L14 0l14 8v17zM14 33v17' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E"),
-    linear-gradient(to top right, #000 0%, transparent 55%);
-  mask-size:
-    28px 50px,
-    100% 100%;
-  mask-composite: intersect;
+  object-position: center 35%;
+  background-color: var(--bg-alt);
+  mask: var(--hexagon) center / 100% 100% no-repeat;
 }
 
 .about__body {
