@@ -1,11 +1,17 @@
-import type { InstagramProfile } from '../lib/instagram';
 import { ABOUT_HEADING, ABOUT_PARAGRAPHS, INSTAGRAM_HANDLE, INSTAGRAM_URL } from '../lib/site';
-import { Picture } from './Picture';
 
-export function About({ profile }: { profile: InstagramProfile | null }) {
+export function About() {
   return (
     <section id="about" className="about" aria-labelledby="about-heading" data-reveal>
-      {profile?.avatar && <Picture image={profile.avatar} alt="Marty" sizes="160px" className="about__avatar" />}
+      <img
+        className="about__photo"
+        src="/images/marty.jpg"
+        alt="Marty in a navy cap and dark-rimmed glasses"
+        width={843}
+        height={1124}
+        loading="lazy"
+        decoding="async"
+      />
       <div className="about__body">
         <h2 id="about-heading" className="section-heading">
           {ABOUT_HEADING}

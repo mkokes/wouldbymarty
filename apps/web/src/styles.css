@@ -629,9 +629,9 @@ button {
 
 .about {
   display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 2.5rem;
-  align-items: start;
+  grid-template-columns: 260px 1fr;
+  gap: 2.75rem;
+  align-items: center;
   max-width: 880px;
   margin: 6rem auto;
   padding: 2.75rem;
@@ -641,14 +641,14 @@ button {
   box-shadow: var(--shadow);
 }
 
-.about:not(:has(.about__avatar)) {
-  grid-template-columns: 1fr;
-}
-
-.about__avatar {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
+.about__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 16px;
+  background-color: var(--bg-alt);
   box-shadow:
     0 0 0 4px var(--surface),
     0 0 0 6px var(--accent);
@@ -729,8 +729,9 @@ button {
     padding: 2rem 1.5rem;
   }
 
-  .about__avatar {
+  .about__photo {
     justify-self: center;
+    max-width: 240px;
   }
 }
 

@@ -58,7 +58,7 @@ export function App({ feed }: { feed: InstagramFeed }) {
         )}
 
         <div className="container">
-          <About profile={profile} />
+          <About />
         </div>
       </main>
 

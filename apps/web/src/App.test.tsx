@@ -16,6 +16,7 @@ describe('App', () => {
     expect(screen.queryByRole('heading', { name: 'Latest from the shop' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Work' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: ABOUT_HEADING })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Marty/ })).toHaveAttribute('src', '/images/marty.jpg');
     expect(screen.getByRole('link', { name: /Follow @wouldbymarty/ })).toHaveAttribute('href', INSTAGRAM_URL);
   });
 
