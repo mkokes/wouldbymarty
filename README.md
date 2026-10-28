@@ -63,3 +63,9 @@ The site assumes it's served from the domain root (Vite's default `base`), which
 ## Contributing
 
 See [AGENTS.md](AGENTS.md) for the layout and conventions. Work on a branch and open a pull request: the workflow runs lint, format check, tests and build, and a merged PR deploys.
+
+## License
+
+Copyright (C) 2026 Marty Kokes
+
+Licensed under the GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
