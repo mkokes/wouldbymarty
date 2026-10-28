@@ -3,15 +3,18 @@ import { ABOUT_HEADING, ABOUT_PARAGRAPHS, INSTAGRAM_HANDLE, INSTAGRAM_URL } from
 export function About() {
   return (
     <section id="about" className="about" aria-labelledby="about-heading" data-reveal>
-      <img
-        className="about__photo"
-        src="/images/marty.jpg"
-        alt="Marty in a navy cap and dark-rimmed glasses"
-        width={843}
-        height={1124}
-        loading="lazy"
-        decoding="async"
-      />
+      <span className="about__photo">
+        <img
+          src="/images/marty-260.webp"
+          srcSet="/images/marty-260.webp 260w, /images/marty-520.webp 520w"
+          sizes="(max-width: 800px) 240px, 260px"
+          alt="Marty in a navy cap and dark-rimmed glasses"
+          width={520}
+          height={693}
+          loading="lazy"
+          decoding="async"
+        />
+      </span>
       <div className="about__body">
         <h2 id="about-heading" className="section-heading">
           {ABOUT_HEADING}
