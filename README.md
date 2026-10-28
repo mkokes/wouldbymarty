@@ -6,30 +6,28 @@ Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site i
 
 ## Tech stack
 
-| Layer | Technology |
-|-------|------------|
-| Web | Vite 8, React 19, TypeScript 7 (static SPA) |
-| Content | Instagram API with Instagram Login, fetched **at build time** |
-| PWA | Web app manifest + hand-written service worker (`public/sw.js`) |
-| Hosting | GitHub Pages via GitHub Actions, rebuilt daily on a schedule |
-| Tooling | Vitest, oxlint, oxfmt |
-| Monorepo | Turborepo (single app: `apps/web`) |
+| Layer   | Technology                                                      |
+| ------- | --------------------------------------------------------------- |
+| Web     | Vite 8, React 19, TypeScript 7 (static SPA)                     |
+| Content | Instagram API with Instagram Login, fetched **at build time**   |
+| PWA     | Web app manifest + hand-written service worker (`public/sw.js`) |
+| Hosting | GitHub Pages via GitHub Actions, rebuilt daily on a schedule    |
+| Tooling | Vitest, oxlint, oxfmt                                           |
 
 ## Getting started
 
 ```bash
 npm install
-cp apps/web/.env.example apps/web/.env.local   # add your Instagram token
-cd apps/web
+cp .env.example .env.local   # add your Instagram token
 npm run dev        # http://localhost:5173 (syncs Instagram first)
-npm run build      # pre-rendered static site in apps/web/dist
-npm run preview    # serve apps/web/dist locally
+npm run build      # pre-rendered static site in dist/
+npm run preview    # serve dist/ locally
 npm test           # vitest
 npm run lint       # oxlint
 npm run format     # oxfmt
 ```
 
-`predev` and `prebuild` run `scripts/fetch-instagram.mjs`. It downloads the latest 12 posts into `public/instagram/` and writes `src/data/instagram.json`. Both are git-ignored. Without a token the site still builds: the grid is hidden, and the intro uses the fallback copy in `src/lib/site.ts`.
+`predev` and `prebuild` run `scripts/fetch-instagram.mjs`. It downloads the profile, the latest posts and the hero reel into `public/instagram/` (as WebP renditions) and writes `src/data/instagram.json`. Both are git-ignored. Without a token the site still builds: the grid is hidden, and the intro uses the fallback copy in `src/lib/site.ts`.
 
 A husky pre-push hook runs lint and tests before every `git push`. It's installed automatically by `npm install`.
 
@@ -41,15 +39,16 @@ The service worker only registers in production builds. To test the PWA, run `np
 
 1. **Switch the account to Business or Creator.** In the Instagram app, go to Settings → Account type and tools.
 2. **Create a Meta app.** At [developers.facebook.com](https://developers.facebook.com/apps), create an app and add the **Instagram** product, choosing "API setup with Instagram login".
-3. **Add the account and generate a token.** Under *Generate access tokens*, add @wouldbymarty (accept the tester invite in Instagram if prompted), then generate a token. The token from this screen is long-lived (60 days).
+3. **Add the account and generate a token.** Under _Generate access tokens_, add @wouldbymarty (accept the tester invite in Instagram if prompted), then generate a token. The token from this screen is long-lived (60 days).
 
 The app only needs the `instagram_business_basic` permission. It doesn't need app review, because it only reads your own account.
 
 ## Deploying to GitHub Pages
 
 The workflow is `.github/workflows/deploy.yml`.
+
 - On pull requests, it runs lint, format check, tests and build.
-- When a PR is merged into `main`, it deploys `apps/web/dist` to GitHub Pages. A direct push to `main` runs the checks but doesn't deploy.
+- When a PR is merged into `main`, it deploys `dist/` to GitHub Pages. A direct push to `main` runs the checks but doesn't deploy.
 - It also deploys once a day on a schedule (11:00 UTC) to pick up new Instagram posts, and can be started by hand from the Actions tab.
 
 Pages is already enabled for this repo with **Source: GitHub Actions**, and `wouldbymarty.com` is set as the custom domain with HTTPS enforced. The remaining setup is two repository secrets (Settings → Secrets and variables → Actions):
@@ -61,6 +60,6 @@ GitHub disables scheduled workflows after 60 days without repository activity. I
 
 The site assumes it's served from the domain root (Vite's default `base`), which holds for the custom domain.
 
-## License
+## Contributing
 
-MIT
+See [AGENTS.md](AGENTS.md) for the layout and conventions. Work on a branch and open a pull request: the workflow runs lint, format check, tests and build, and a merged PR deploys.
