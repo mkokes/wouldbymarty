@@ -3,7 +3,7 @@
 ## Overview
 
 ```
-GitHub Actions (push to main, or daily schedule)
+GitHub Actions (PR merged into main, daily schedule, or manual run)
   └─ prebuild: scripts/fetch-instagram.mjs
        ├─ refresh Instagram token ──▶ `gh secret set` back to the repository secret
        ├─ GET graph.instagram.com /me, /me/media

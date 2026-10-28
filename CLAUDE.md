@@ -48,7 +48,8 @@ GitHub Pages serves the files in `apps/web/dist`. `index.html` holds the meta, O
 ### Instagram data is fetched at build time
 
 - `apps/web/scripts/fetch-instagram.mjs` runs as `predev`/`prebuild`. It loads `.env.local` via `node --env-file-if-exists`.
-  - It calls `graph.instagram.com` and downloads each post's image into `public/instagram/<id>.jpg`. Instagram CDN URLs are signed and expire, so the static page must not hotlink them.
+  - It calls `graph.instagram.com` for the profile and the latest 14 posts. It also pages through older posts to find the hero post (`HERO_SHORTCODE` in the script).
+  - It stores the media in `public/instagram/`, because Instagram CDN URLs are signed and expire and the static page must not hotlink them. Images go through sharp into WebP renditions (`POST_WIDTHS` / `POSTER_WIDTHS` / `AVATAR_WIDTHS`), each with a tiny base64 blur placeholder. The hero reel's MP4 is downloaded as-is, up to 30 MB.
   - It writes `src/data/instagram.json`. Both outputs are git-ignored.
   - It never fails the build. On an error it keeps the previous data, or writes an empty feed.
   - In GitHub Actions with `GH_SECRETS_TOKEN` set, it refreshes the 60-day Instagram token, masks it in the logs, and saves it back to the `INSTAGRAM_ACCESS_TOKEN` repository secret with `gh secret set`. The value is passed on stdin. The workflow's `GITHUB_TOKEN` can't write secrets, hence the separate fine-grained PAT.
@@ -61,15 +62,35 @@ GitHub Pages serves the files in `apps/web/dist`. `index.html` holds the meta, O
 - `public/sw.js` is a hand-written service worker:
   - Navigations are network-first, with an offline fallback to the cached `/`.
   - Vite's hashed `/assets/*` files are cache-first.
+  - Video requests (range requests) bypass the worker so the hero reel can stream.
   - Other same-origin assets are stale-while-revalidate.
   - Bump `VERSION` when you change caching behaviour.
 
 ### Other
 
-- `src/lib/site.ts` holds the handle, profile URL, tagline and fallback bio.
-- Styling is plain CSS classes in `src/styles.css`, using CSS custom properties. There's one palette ("Modern Artisan"), and dark mode follows `prefers-color-scheme`.
+- `src/lib/site.ts` holds the handle, profile URL, tagline, fallback bio, and the drafted "About the maker" copy.
+- Page layout (`App.tsx`):
+  - **Hero:** muted looping video, with a poster and a pause button. It doesn't autoplay with reduced motion or Save-Data.
+  - **Featured post:** `arrangePosts()` picks the newest post that isn't the hero. Its caption's first line becomes the headline, and trailing hashtags are stripped by `cleanCaption()`.
+  - **Grid:** up to 12 tiles, trimmed to whole rows of three. On two-column mobile, CSS hides a lone last tile.
+  - **About** section.
+- `Picture` renders responsive images that fade in over the blurred placeholder.
+- Dates use a fixed locale and UTC (`formatPostDate`) so the pre-rendered HTML matches hydration.
+- **Theme:** there's a 3-way toggle (system/light/dark) in `src/lib/theme.ts` + `ThemeToggle`, stored in `localStorage` (`wbm-theme`) and applied as `data-theme` on `<html>`.
+  - An inline script in `index.html` applies the stored theme and adds the `js` class before first paint. Keep its key and colors in sync with `theme.ts`.
+  - The toggle uses `useSyncExternalStore` with a "system" server snapshot, so pre-rendering doesn't cause hydration errors.
+- **Scroll reveal:** elements with `data-reveal` fade in through `src/lib/reveal.ts`, which is initialised in an effect after hydration. They're only hidden under `html.js` with no reduced-motion preference.
+- Styling is plain CSS classes in `src/styles.css`, built on CSS custom properties.
+  - The "warm workshop" palette is cream and oak. The dark theme is walnut, and it's defined twice: under `prefers-color-scheme: dark` (unless `data-theme="light"`) and under `[data-theme="dark"]`.
+  - Fonts are loaded in `index.html`: Chango for the wordmark, Fraunces for headings, Montserrat for body text.
+  - A fixed SVG-noise overlay adds the grain.
 - Any env var the build needs must be listed in `turbo.json` → `tasks.build.passThroughEnv`, or Turbo will strip it.
 
 ### Deployment
 
-`.github/workflows/deploy.yml` runs on pull requests (checks and build only) and on pushes to `main`, a daily schedule and manual dispatch. Those last three also deploy `apps/web/dist` with `actions/deploy-pages`. The `github-pages` environment only allows `main`. The custom domain `wouldbymarty.com` is configured in the repo's Pages settings, not with a CNAME file. See the README for the secrets. The site assumes it's served from the domain root; Vite's `base` is the default `/`.
+`.github/workflows/deploy.yml` runs on pull requests (checks and build only), on pushes to `main`, on a daily schedule and on manual dispatch.
+
+- A push to `main` deploys only when the commit belongs to a merged PR. A `gate` step checks this with `gh api repos/…/commits/<sha>/pulls`, so direct pushes never go live.
+- Merges are detected from the push rather than the PR `closed` event, because the `github-pages` environment only allows `main`.
+- Scheduled and manual runs always deploy, which is how new Instagram posts reach the site.
+- The custom domain `wouldbymarty.com` is configured in the repo's Pages settings, not with a CNAME file. See the README for the secrets.

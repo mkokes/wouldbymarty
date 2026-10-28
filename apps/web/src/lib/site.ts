@@ -2,7 +2,7 @@ export const INSTAGRAM_HANDLE = 'wouldbymarty';
 export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}/`;
 
 export const SITE_TAGLINE = 'Woodworking by a guy named Marty';
-export const FALLBACK_BIO = 'If they don\'t find you handsome, they should at least find you handy. -Red Green';
+export const FALLBACK_BIO = "If they don't find you handsome, they should at least find you handy. -Red Green";
 
 export const ABOUT_HEADING = 'About the maker';
 export const ABOUT_PARAGRAPHS = [
