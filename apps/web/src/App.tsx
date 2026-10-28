@@ -1,3 +1,4 @@
+import { About } from './components/About';
 import { InstagramGrid } from './components/InstagramGrid';
 import type { InstagramFeed } from './lib/instagram';
 import { FALLBACK_BIO, INSTAGRAM_HANDLE, INSTAGRAM_URL, SITE_TAGLINE } from './lib/site';
@@ -42,6 +43,8 @@ export function App({ feed }: { feed: InstagramFeed }) {
               </div>
             </section>
           )}
+
+          <About />
         </div>
       </main>
 

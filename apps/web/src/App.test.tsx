@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { App } from './App';
 import { EMPTY_FEED, type InstagramFeed } from './lib/instagram';
-import { FALLBACK_BIO, INSTAGRAM_URL } from './lib/site';
+import { ABOUT_HEADING, FALLBACK_BIO, INSTAGRAM_URL } from './lib/site';
 
 const feed: InstagramFeed = {
   fetchedAt: '2026-10-26T00:00:00Z',
@@ -38,5 +38,12 @@ describe('App', () => {
     expect(image).toHaveAttribute('src', '/instagram/1.jpg');
     expect(image.closest('a')).toHaveAttribute('href', 'https://www.instagram.com/p/one/');
     expect(screen.getByLabelText('Multiple photos')).toBeInTheDocument();
+  });
+
+  it('renders the about section with a photo', () => {
+    render(<App feed={EMPTY_FEED} />);
+
+    expect(screen.getByRole('heading', { name: ABOUT_HEADING })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Marty/ })).toHaveAttribute('src', '/images/marty.jpg');
   });
 });
