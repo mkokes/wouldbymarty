@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-28
+
 ### Added
 
 - Instagram-powered landing page: posts, media and the hero reel are synced at build time, with automatic token refresh.
@@ -27,3 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The e-commerce storefront (Convex, Clerk, Stripe, MSW mocks, Expo scaffold, shared UI package). It's preserved on the `ecommerce-archive` branch and the `ecommerce-v0` tag.
 - The old Medusa backend under `archive/`, plus unused tool config and docs.
+
+[Unreleased]: https://github.com/mkokes/wouldbymarty/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/mkokes/wouldbymarty/releases/tag/v0.1.0
