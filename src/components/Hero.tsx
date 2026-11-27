@@ -9,7 +9,7 @@ function shouldAutoplay() {
   return !reducedMotion && !saveData;
 }
 
-export function Hero({ hero, bio }: { hero: InstagramHero | null; bio: string }) {
+export function Hero({ hero, hasWork = true }: { hero: InstagramHero | null; hasWork?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -63,13 +63,12 @@ export function Hero({ hero, bio }: { hero: InstagramHero | null; bio: string })
           <span className="wordmark__byline">By Marty</span>
         </h1>
         <p className="hero__tagline">{SITE_TAGLINE}</p>
-        <p className="hero__bio">{bio}</p>
         <div className="hero__actions">
           <a className="btn btn-primary" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
             Follow @{INSTAGRAM_HANDLE}
           </a>
-          <a className="btn btn-ghost" href="#work">
-            See the work
+          <a className="btn btn-ghost" href={hasWork ? '#work' : '#tools'}>
+            {hasWork ? 'See the work' : 'Explore tools'}
           </a>
         </div>
       </div>

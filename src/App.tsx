@@ -4,14 +4,15 @@ import { FeaturedPost } from './components/FeaturedPost';
 import { Hero } from './components/Hero';
 import { InstagramGrid } from './components/InstagramGrid';
 import { ThemeToggle } from './components/ThemeToggle';
+import { Tools } from './components/Tools';
 import { arrangePosts, type InstagramFeed } from './lib/instagram';
 import { initReveal } from './lib/reveal';
-import { FALLBACK_BIO, INSTAGRAM_HANDLE, INSTAGRAM_URL } from './lib/site';
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from './lib/site';
 
 const YEAR = new Date().getFullYear();
 
 export function App({ feed }: { feed: InstagramFeed }) {
-  const { profile, hero } = feed;
+  const { hero } = feed;
   const { featured, grid } = arrangePosts(feed);
 
   // After hydration, so the classes it adds don't count as hydration mismatches.
@@ -24,6 +25,7 @@ export function App({ feed }: { feed: InstagramFeed }) {
       <header className="site-header">
         <nav className="site-nav" aria-label="Main">
           {featured && <a href="#work">Work</a>}
+          <a href="#tools">Tools</a>
           <a href="#about">About</a>
           <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
             Instagram
@@ -33,7 +35,7 @@ export function App({ feed }: { feed: InstagramFeed }) {
       </header>
 
       <main>
-        <Hero hero={hero} bio={profile?.biography || FALLBACK_BIO} />
+        <Hero hero={hero} hasWork={Boolean(featured)} />
 
         {featured && (
           <section id="work" className="work container" aria-labelledby="work-heading">
@@ -56,6 +58,8 @@ export function App({ feed }: { feed: InstagramFeed }) {
             </div>
           </section>
         )}
+
+        <Tools />
 
         <div className="container">
           <About />
