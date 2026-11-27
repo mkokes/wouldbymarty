@@ -113,9 +113,9 @@ export function Tools({ tools = WORKSHOP_TOOLS }: { tools?: WorkshopTool[] }) {
       <ul className={`tools-grid ${single ? 'tools-grid--single' : ''}`}>
         {tools.map((tool) => (
           <li key={tool.id} className="tool-card" data-reveal>
-            <a className="tool-card__mark" href={tool.url} target="_blank" rel="noopener noreferrer" tabIndex={-1}>
+            <span className="tool-card__mark" aria-hidden="true">
               <ToolMark id={tool.id} />
-            </a>
+            </span>
             <div className="tool-card__body">
               <div className="tool-card__meta">
                 <span className="eyebrow">{tool.category}</span>
