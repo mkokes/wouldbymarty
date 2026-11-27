@@ -1,6 +1,6 @@
 # Would? By Marty
 
-Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site is a single page: a short intro, a grid of the latest posts from the [@wouldbymarty](https://www.instagram.com/wouldbymarty/) Instagram account, and a "Follow on Instagram" call to action. It's an installable PWA, hosted on GitHub Pages.
+Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site is a single page: a hero section, a featured post and grid of the latest posts from the [@wouldbymarty](https://www.instagram.com/wouldbymarty/) Instagram account, a **Tools** section showcasing shop utilities (currently [Segmentor](https://segmentor.wouldbymarty.com/)), an "About the maker" section, and a "Follow on Instagram" call to action. It's an installable PWA, hosted on GitHub Pages.
 
 > The previous e-commerce build (Convex + Clerk + Stripe storefront and an Expo mobile scaffold) is preserved on the `ecommerce-archive` branch and the `ecommerce-v0` tag.
 
@@ -23,11 +23,12 @@ npm run dev        # http://localhost:5173 (syncs Instagram first)
 npm run build      # pre-rendered static site in dist/
 npm run preview    # serve dist/ locally
 npm test           # vitest
+npm run typecheck  # tsc --noEmit
 npm run lint       # oxlint
 npm run format     # oxfmt
 ```
 
-`predev` and `prebuild` run `scripts/fetch-instagram.mjs`. It downloads the profile, the latest posts and the hero reel into `public/instagram/` (as WebP renditions) and writes `src/data/instagram.json`. Both are git-ignored. Without a token the site still builds: the grid is hidden, and the intro uses the fallback copy in `src/lib/site.ts`.
+`predev` and `prebuild` run `scripts/fetch-instagram.mjs`. It downloads the profile, the latest posts and the hero reel into `public/instagram/` (as WebP renditions) and writes `src/data/instagram.json`. Both are git-ignored. Without a token the site still builds: the hero video and work grid are hidden, and the page renders the static tagline, tools, and about copy from `src/lib/site.ts`.
 
 A husky pre-push hook runs lint and tests before every `git push`. It's installed automatically by `npm install`.
 

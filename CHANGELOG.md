@@ -9,7 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- GPL-3.0-or-later license (`LICENSE`).
+- Tools section (`#tools`) featuring [Segmentor](https://segmentor.wouldbymarty.com/), with a header navigation link and custom SVG mark.
+- Support for Instagram API with Unified Login (`EAA...` Business Integration System User tokens via `graph.facebook.com`) in `scripts/fetch-instagram.mjs`, alongside legacy Instagram Login (`IG...`) tokens.
+- Optional Cloudflare cache purge step in the GitHub Pages deploy workflow (`CLOUDFLARE_API_TOKEN` secret and `CLOUDFLARE_ZONE_ID` variable).
+- GPL-3.0-or-later license (`LICENSE`), Dependabot configuration, and `.editorconfig`.
+
+### Changed
+
+- Updated the hero tagline.
+
+### Removed
+
+- Legacy Instagram token refresh workflow step (`GH_SECRETS_TOKEN`).
 
 ## [0.1.0] - 2026-10-28
 
