@@ -1,7 +1,7 @@
 export const INSTAGRAM_HANDLE = 'wouldbymarty';
 export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}/`;
 
-export const SITE_TAGLINE = "If you're not handsome, they should at least find you handy";
+export const SITE_TAGLINE = "If they don't find you handsome, they should at least find you handy";
 
 export interface WorkshopTool {
   id: string;
