@@ -9,15 +9,9 @@
 // are signed and expire, so a static page can't hotlink them), and writes
 // src/data/instagram.json for the app.
 //
-// When running in GitHub Actions with an Instagram Login token (IG...) and
-// GH_SECRETS_TOKEN set, the long-lived access token is refreshed and written
-// back to the INSTAGRAM_ACCESS_TOKEN repository secret (via `gh secret set`),
-// so the scheduled workflow keeps it from expiring (60-day lifetime).
-//
 // Never fails the build: on any error it keeps the previous data (or writes an
 // empty feed), and the page renders without Instagram content.
 
-import { spawnSync } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,49 +59,6 @@ function isInstagramLoginToken(token) {
 function graphUrl(baseUrl, endpoint, params, token) {
   const query = new URLSearchParams({ ...params, access_token: token });
   return `${baseUrl}/${API_VERSION}/${endpoint}?${query}`;
-}
-
-function saveTokenSecret(token) {
-  const { GH_SECRETS_TOKEN, GITHUB_REPOSITORY } = process.env;
-  // The value goes over stdin so it never appears in the process list.
-  const result = spawnSync('gh', ['secret', 'set', TOKEN_VARIABLE, '--repo', GITHUB_REPOSITORY], {
-    input: token,
-    env: { ...process.env, GH_TOKEN: GH_SECRETS_TOKEN },
-    encoding: 'utf8',
-  });
-  if (result.status !== 0) {
-    console.warn(`[instagram] could not save refreshed token to GitHub secrets: ${result.stderr || result.error}`);
-  } else {
-    console.log('[instagram] access token refreshed and saved to GitHub secrets');
-  }
-}
-
-async function refreshToken(token) {
-  if (!isInstagramLoginToken(token)) return token;
-  const { GITHUB_ACTIONS, GITHUB_REPOSITORY, GH_SECRETS_TOKEN } = process.env;
-  // Without a place to persist it, refreshing would just strand the new token.
-  if (GITHUB_ACTIONS !== 'true' || !GITHUB_REPOSITORY || !GH_SECRETS_TOKEN) return token;
-
-  try {
-    const res = await fetch(
-      `${INSTAGRAM_GRAPH_URL}/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(token)}`,
-    );
-    if (!res.ok) {
-      // Instagram rejects refreshes of tokens younger than 24h; that's fine.
-      console.warn(`[instagram] token refresh skipped: ${res.status}`);
-      return token;
-    }
-    const { access_token } = await res.json();
-    if (!access_token) return token;
-
-    // Keep the new token out of the workflow logs.
-    console.log(`::add-mask::${access_token}`);
-    saveTokenSecret(access_token);
-    return access_token;
-  } catch (error) {
-    console.warn('[instagram] token refresh error', error);
-    return token;
-  }
 }
 
 async function download(url) {
@@ -262,7 +213,7 @@ async function main() {
     console.warn(`[instagram] ${TOKEN_VARIABLE} not set; skipping sync`);
   } else {
     try {
-      const feed = await sync(await refreshToken(token));
+      const feed = await sync(token);
       await fs.writeFile(dataFile, JSON.stringify(feed, null, 2));
       console.log(`[instagram] synced ${feed.posts.length} posts${feed.hero?.video ? ' and the hero video' : ''}`);
       return;

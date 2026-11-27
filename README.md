@@ -43,12 +43,12 @@ The service worker only registers in production builds. To test the PWA, run `np
 
 1. **Switch the account to Business or Creator.** In the Instagram app, go to Settings → Account type and tools.
 2. **Create a Meta app** at [developers.facebook.com](https://developers.facebook.com/apps) with the Instagram use case (**API setup with Unified login**).
-3. **Generate a Business Integration System User token** with `instagram_basic` and assign the `@wouldbymarty` Instagram account. Non-expiring System User tokens don't require `GH_SECRETS_TOKEN` refresh.
+3. **Generate a Business Integration System User token** with `instagram_basic`, set it to never expire, and assign the `@wouldbymarty` Instagram account.
 
 ### Instagram Login (legacy)
 
 1. Add the **Instagram** product choosing "API setup with Instagram login" and `instagram_business_basic`.
-2. Under _Generate access tokens_, add `@wouldbymarty` and generate a 60-day `IG...` token (`GH_SECRETS_TOKEN` refreshes these automatically in CI).
+2. Under _Generate access tokens_, add `@wouldbymarty` and generate an `IG...` token.
 
 ## Deploying to GitHub Pages
 
@@ -58,10 +58,10 @@ The workflow is `.github/workflows/deploy.yml`.
 - When a PR is merged into `main`, it deploys `dist/` to GitHub Pages. A direct push to `main` runs the checks but doesn't deploy.
 - It also deploys once a day on a schedule (11:00 UTC) to pick up new Instagram posts, and can be started by hand from the Actions tab.
 
-Pages is already enabled for this repo with **Source: GitHub Actions**, and `wouldbymarty.com` is set as the custom domain with HTTPS enforced. The remaining setup is two repository secrets (Settings → Secrets and variables → Actions):
+Pages is already enabled for this repo with **Source: GitHub Actions**, and `wouldbymarty.com` is set as the custom domain with HTTPS enforced. The remaining setup is:
 
-1. `INSTAGRAM_ACCESS_TOKEN`: the token from above.
-2. `GH_SECRETS_TOKEN`: a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) scoped to this repository, with the **Secrets: Read and write** permission. On each scheduled or `main` build, the workflow refreshes the Instagram token and saves it back to `INSTAGRAM_ACCESS_TOKEN` through `gh secret set`, so it never hits the 60-day expiry. Workflows' built-in `GITHUB_TOKEN` can't write secrets, which is why a separate token is needed. Fine-grained tokens expire, so set a long expiry and renew it before then.
+- `INSTAGRAM_ACCESS_TOKEN` repository secret: the non-expiring token from above.
+- `CLOUDFLARE_API_TOKEN` repository secret + `CLOUDFLARE_ZONE_ID` repository variable _(optional)_: purges the Cloudflare cache after deploy.
 
 GitHub disables scheduled workflows after 60 days without repository activity. If that happens, re-enable the workflow from the Actions tab.
 

@@ -1,18 +1,15 @@
 # Checks, builds and deploys the site to GitHub Pages.
 #
-# - Pull requests: lint, format check, tests and build only (no deploy, no token refresh).
+# - Pull requests: lint, format check, tests and build only (no deploy).
 # - Pushes to main: the same checks; deploys only if the commit came from a merged PR,
 #   so direct pushes to main never go live.
-# - Daily schedule and manual runs: rebuild with fresh Instagram posts, refresh the
-#   Instagram access token and deploy.
+# - Daily schedule and manual runs: rebuild with fresh Instagram posts and deploy.
 #
 # Merges are detected from the push to main (not the PR "closed" event) because the
 # github-pages environment only allows deployments from main.
 #
 # Repository secrets (Settings > Secrets and variables > Actions):
-#   INSTAGRAM_ACCESS_TOKEN  long-lived Instagram token
-#   GH_SECRETS_TOKEN        fine-grained PAT for this repo with "Secrets: Read and write",
-#                           used to save the refreshed Instagram token back to the secret above
+#   INSTAGRAM_ACCESS_TOKEN  non-expiring Unified Login Business System User token
 #   CLOUDFLARE_API_TOKEN    Cloudflare API token with Zone:Cache Purge on wouldbymarty.com
 # Repository variables:
 #   CLOUDFLARE_ZONE_ID      Cloudflare zone ID for wouldbymarty.com
@@ -80,7 +77,6 @@ jobs:
         run: npm run build
         env:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-          GH_SECRETS_TOKEN: ${{ steps.gate.outputs.deploy == 'true' && secrets.GH_SECRETS_TOKEN || '' }}
       - if: steps.gate.outputs.deploy == 'true'
         uses: actions/upload-pages-artifact@v5
         with:
