@@ -1,14 +1,18 @@
 // Build-time Instagram sync for the static site.
 //
-// Fetches the profile, the latest posts and the hero reel from the Instagram API
-// (with Instagram Login), stores optimized copies of the media in
-// public/instagram/ (Instagram CDN URLs are signed and expire, so a static page
-// can't hotlink them), and writes src/data/instagram.json for the app.
+// Fetches the profile, the latest posts and the hero reel from either:
+//   - Instagram API with Unified Login (graph.facebook.com, EAA... Business
+//     Integration System User token), or
+//   - Instagram API with Instagram Login (graph.instagram.com, IG... token).
 //
-// When running in GitHub Actions with GH_SECRETS_TOKEN set, the long-lived
-// access token is refreshed and written back to the INSTAGRAM_ACCESS_TOKEN
-// repository secret (via `gh secret set`), so the scheduled workflow keeps it
-// from expiring (60-day lifetime).
+// Stores optimized copies of the media in public/instagram/ (Instagram CDN URLs
+// are signed and expire, so a static page can't hotlink them), and writes
+// src/data/instagram.json for the app.
+//
+// When running in GitHub Actions with an Instagram Login token (IG...) and
+// GH_SECRETS_TOKEN set, the long-lived access token is refreshed and written
+// back to the INSTAGRAM_ACCESS_TOKEN repository secret (via `gh secret set`),
+// so the scheduled workflow keeps it from expiring (60-day lifetime).
 //
 // Never fails the build: on any error it keeps the previous data (or writes an
 // empty feed), and the page renders without Instagram content.
@@ -19,7 +23,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const GRAPH_URL = 'https://graph.instagram.com';
+const INSTAGRAM_GRAPH_URL = 'https://graph.instagram.com';
+const FACEBOOK_GRAPH_URL = 'https://graph.facebook.com';
 const API_VERSION = 'v22.0';
 // One featured post plus a 12-tile grid, with room to skip the hero if it's recent.
 const MEDIA_LIMIT = 14;
@@ -53,9 +58,13 @@ async function getJson(url) {
   return res.json();
 }
 
-function graphUrl(endpoint, params, token) {
+function isInstagramLoginToken(token) {
+  return token.startsWith('IG');
+}
+
+function graphUrl(baseUrl, endpoint, params, token) {
   const query = new URLSearchParams({ ...params, access_token: token });
-  return `${GRAPH_URL}/${API_VERSION}/${endpoint}?${query}`;
+  return `${baseUrl}/${API_VERSION}/${endpoint}?${query}`;
 }
 
 function saveTokenSecret(token) {
@@ -74,13 +83,14 @@ function saveTokenSecret(token) {
 }
 
 async function refreshToken(token) {
+  if (!isInstagramLoginToken(token)) return token;
   const { GITHUB_ACTIONS, GITHUB_REPOSITORY, GH_SECRETS_TOKEN } = process.env;
   // Without a place to persist it, refreshing would just strand the new token.
   if (GITHUB_ACTIONS !== 'true' || !GITHUB_REPOSITORY || !GH_SECRETS_TOKEN) return token;
 
   try {
     const res = await fetch(
-      `${GRAPH_URL}/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(token)}`,
+      `${INSTAGRAM_GRAPH_URL}/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(token)}`,
     );
     if (!res.ok) {
       // Instagram rejects refreshes of tokens younger than 24h; that's fine.
@@ -172,9 +182,28 @@ async function buildHero(item) {
   return { id: item.id, caption: item.caption ?? null, permalink: item.permalink, poster, video };
 }
 
+async function resolveTarget(token) {
+  if (isInstagramLoginToken(token)) {
+    return { baseUrl: INSTAGRAM_GRAPH_URL, accountId: 'me' };
+  }
+  const accounts = await getJson(
+    graphUrl(FACEBOOK_GRAPH_URL, 'me/assigned_instagram_accounts', { fields: 'id' }, token),
+  );
+  const accountId = accounts.data?.[0]?.id;
+  if (!accountId) {
+    throw new Error('No assigned Instagram account returned by /me/assigned_instagram_accounts');
+  }
+  return { baseUrl: FACEBOOK_GRAPH_URL, accountId };
+}
+
 async function sync(token) {
-  const profile = await getJson(graphUrl('me', { fields: 'username,name,biography,profile_picture_url' }, token));
-  const firstPage = await getJson(graphUrl('me/media', { fields: MEDIA_FIELDS, limit: String(MEDIA_LIMIT) }, token));
+  const { baseUrl, accountId } = await resolveTarget(token);
+  const profile = await getJson(
+    graphUrl(baseUrl, accountId, { fields: 'username,name,biography,profile_picture_url' }, token),
+  );
+  const firstPage = await getJson(
+    graphUrl(baseUrl, `${accountId}/media`, { fields: MEDIA_FIELDS, limit: String(MEDIA_LIMIT) }, token),
+  );
 
   await fs.rm(tmpDir, { recursive: true, force: true });
   await fs.mkdir(tmpDir, { recursive: true });
@@ -227,7 +256,7 @@ async function sync(token) {
 
 async function main() {
   await fs.mkdir(path.dirname(dataFile), { recursive: true });
-  const token = process.env[TOKEN_VARIABLE];
+  const token = process.env[TOKEN_VARIABLE]?.trim();
 
   if (!token) {
     console.warn(`[instagram] ${TOKEN_VARIABLE} not set; skipping sync`);
