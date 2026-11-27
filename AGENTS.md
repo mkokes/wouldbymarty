@@ -15,7 +15,7 @@ The site used to be an e-commerce storefront (Next.js, Convex, Clerk, Stripe, MS
 .husky/pre-push                lint + tests before every push
 index.html                     page shell, meta tags, inline theme script
 public/                        manifest, service worker, icons, static images
-scripts/fetch-instagram.mjs    build-time Instagram sync (posts, media, token refresh)
+scripts/fetch-instagram.mjs    build-time Instagram sync (posts, media)
 scripts/prerender.mjs          build-time SSR into dist/index.html
 src/App.tsx                    the landing page
 src/components/                Hero, FeaturedPost, InstagramGrid, About, Picture, ThemeToggle
@@ -63,11 +63,10 @@ GitHub Pages serves the files in `dist/`. `index.html` holds the meta, Open Grap
 ### Instagram data is fetched at build time
 
 - `scripts/fetch-instagram.mjs` runs as `predev`/`prebuild`. It loads `.env.local` via `node --env-file-if-exists`.
-  - It calls `graph.instagram.com` for the profile and the latest 14 posts. It also pages through older posts to find the hero post (`HERO_SHORTCODE` in the script).
+  - It calls the Instagram API (`graph.facebook.com` for Unified Login `EAA...` tokens via `/me/assigned_instagram_accounts`, or `graph.instagram.com` for legacy `IG...` tokens) for the profile and the latest 14 posts. It also pages through older posts to find the hero post (`HERO_SHORTCODE` in the script).
   - It stores the media in `public/instagram/`, because Instagram CDN URLs are signed and expire and the static page must not hotlink them. Images go through sharp into WebP renditions (`POST_WIDTHS` / `POSTER_WIDTHS` / `AVATAR_WIDTHS`), each with a tiny base64 blur placeholder. The hero reel's MP4 is downloaded as-is, up to 30 MB.
   - It writes `src/data/instagram.json`. Both outputs are git-ignored.
   - It never fails the build. On an error it keeps the previous data, or writes an empty feed.
-  - In GitHub Actions with `GH_SECRETS_TOKEN` set, it refreshes the 60-day Instagram token, masks it in the logs, and saves it back to the `INSTAGRAM_ACCESS_TOKEN` repository secret with `gh secret set`. The value is passed on stdin. The workflow's `GITHUB_TOKEN` can't write secrets, hence the separate fine-grained PAT.
 - `src/lib/instagram.ts` pulls the JSON in through an eager `import.meta.glob`. That resolves to `{}` when the file is missing, so a missing file isn't an error. `normalizeFeed()` fills in the defaults.
 - Freshness comes from a scheduled GitHub Actions run (daily), not from runtime fetching.
 
@@ -109,9 +108,10 @@ GitHub Pages serves the files in `dist/`. `index.html` holds the meta, Open Grap
 - Scheduled and manual runs always deploy, which is how new Instagram posts reach the site.
 - The custom domain `wouldbymarty.com` is configured in the repo's Pages settings, not with a CNAME file.
 
-Repository secrets (Settings → Secrets and variables → Actions):
+Repository secrets & variables (Settings → Secrets and variables → Actions):
 
-| Secret                   | Value                                                         |
-| ------------------------ | ------------------------------------------------------------- |
-| `INSTAGRAM_ACCESS_TOKEN` | Long-lived Instagram token (see README)                       |
-| `GH_SECRETS_TOKEN`       | Fine-grained PAT for this repo with "Secrets: Read and write" |
+| Name                     | Type     | Value                                                      |
+| ------------------------ | -------- | ---------------------------------------------------------- |
+| `INSTAGRAM_ACCESS_TOKEN` | Secret   | Non-expiring Instagram token (see README)                  |
+| `CLOUDFLARE_API_TOKEN`   | Secret   | Optional token with Zone:Cache Purge on `wouldbymarty.com` |
+| `CLOUDFLARE_ZONE_ID`     | Variable | Optional zone ID for `wouldbymarty.com`                    |
