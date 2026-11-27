@@ -6,13 +6,13 @@ Landing page for **Would? By Marty**, a handcrafted woodworking shop. The site i
 
 ## Tech stack
 
-| Layer   | Technology                                                      |
-| ------- | --------------------------------------------------------------- |
-| Web     | Vite 8, React 19, TypeScript 7 (static SPA)                     |
-| Content | Instagram API with Instagram Login, fetched **at build time**   |
-| PWA     | Web app manifest + hand-written service worker (`public/sw.js`) |
-| Hosting | GitHub Pages via GitHub Actions, rebuilt daily on a schedule    |
-| Tooling | Vitest, oxlint, oxfmt                                           |
+| Layer   | Technology                                                                  |
+| ------- | --------------------------------------------------------------------------- |
+| Web     | Vite 8, React 19, TypeScript 7 (static SPA)                                 |
+| Content | Instagram API (Unified Login or Instagram Login), fetched **at build time** |
+| PWA     | Web app manifest + hand-written service worker (`public/sw.js`)             |
+| Hosting | GitHub Pages via GitHub Actions, rebuilt daily on a schedule                |
+| Tooling | Vitest, oxlint, oxfmt                                                       |
 
 ## Getting started
 
@@ -37,11 +37,18 @@ The service worker only registers in production builds. To test the PWA, run `np
 
 ## Instagram token setup
 
-1. **Switch the account to Business or Creator.** In the Instagram app, go to Settings → Account type and tools.
-2. **Create a Meta app.** At [developers.facebook.com](https://developers.facebook.com/apps), create an app and add the **Instagram** product, choosing "API setup with Instagram login".
-3. **Add the account and generate a token.** Under _Generate access tokens_, add @wouldbymarty (accept the tester invite in Instagram if prompted), then generate a token. The token from this screen is long-lived (60 days).
+`scripts/fetch-instagram.mjs` supports both **Instagram API with Unified Login** (`EAA...` Business Integration System User tokens via `graph.facebook.com`) and **Instagram API with Instagram Login** (`IG...` tokens via `graph.instagram.com`).
 
-The app only needs the `instagram_business_basic` permission. It doesn't need app review, because it only reads your own account.
+### Unified Login (recommended for new Meta apps)
+
+1. **Switch the account to Business or Creator.** In the Instagram app, go to Settings → Account type and tools.
+2. **Create a Meta app** at [developers.facebook.com](https://developers.facebook.com/apps) with the Instagram use case (**API setup with Unified login**).
+3. **Generate a Business Integration System User token** with `instagram_basic` and assign the `@wouldbymarty` Instagram account. Non-expiring System User tokens don't require `GH_SECRETS_TOKEN` refresh.
+
+### Instagram Login (legacy)
+
+1. Add the **Instagram** product choosing "API setup with Instagram login" and `instagram_business_basic`.
+2. Under _Generate access tokens_, add `@wouldbymarty` and generate a 60-day `IG...` token (`GH_SECRETS_TOKEN` refreshes these automatically in CI).
 
 ## Deploying to GitHub Pages
 
