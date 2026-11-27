@@ -3,34 +3,43 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { App } from './App';
 import { EMPTY_FEED } from './lib/instagram';
-import { ABOUT_HEADING, FALLBACK_BIO, INSTAGRAM_URL } from './lib/site';
+import { ABOUT_HEADING, INSTAGRAM_URL, SITE_TAGLINE, TOOLS_HEADING } from './lib/site';
 import { feed } from './test/fixtures';
 
 describe('App', () => {
-  it('shows the fallback bio, plain hero and About section when the feed is empty', () => {
+  it('shows the updated tagline, plain hero, Tools section and About section when the feed is empty', () => {
     const { container } = render(<App feed={EMPTY_FEED} />);
 
-    expect(screen.getByText(FALLBACK_BIO)).toBeInTheDocument();
+    expect(screen.getByText(SITE_TAGLINE)).toBeInTheDocument();
+    expect(container.querySelector('.hero__bio')).not.toBeInTheDocument();
     expect(container.querySelector('.hero--plain')).toBeInTheDocument();
     expect(container.querySelector('video')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Latest from the shop' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Work' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tools' })).toHaveAttribute('href', '#tools');
+    expect(screen.getByRole('heading', { name: TOOLS_HEADING })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Launch Segmentor' })).toHaveAttribute(
+      'href',
+      'https://segmentor.wouldbymarty.com/',
+    );
     expect(screen.getByRole('heading', { name: ABOUT_HEADING })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /Marty/ })).toHaveAttribute('src', '/images/marty-260.webp');
     expect(screen.getByRole('link', { name: /Follow @wouldbymarty/ })).toHaveAttribute('href', INSTAGRAM_URL);
   });
 
   it('features the latest post and leaves the hero out of the grid', () => {
-    render(<App feed={feed} />);
+    const { container } = render(<App feed={feed} />);
 
-    expect(screen.getByText('Bio from Instagram')).toBeInTheDocument();
+    expect(container.querySelector('.hero__bio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bio from Instagram')).not.toBeInTheDocument();
     const featured = screen.getByRole('article');
     // First caption line becomes the headline; the rest is body text without the trailing hashtags.
     expect(within(featured).getByRole('heading', { name: 'Walnut cutting board' })).toBeInTheDocument();
     expect(featured.querySelector('.featured__caption')).toHaveTextContent(/^Oiled and ready$/);
     expect(within(featured).getByText('October 2026')).toBeInTheDocument();
 
-    const grid = screen.getByRole('list');
+    const workSection = screen.getByRole('region', { name: 'Latest from the shop' });
+    const grid = within(workSection).getByRole('list');
     const tiles = within(grid).getAllByRole('link');
     expect(tiles).toHaveLength(1);
     expect(tiles[0]).toHaveAttribute('href', 'https://www.instagram.com/p/older/');
